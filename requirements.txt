@@ -1,0 +1,8 @@
+Flask
+requests
+beautifulsoup4
+yt-dlp
+ffmpeg-python
+mutagen
+mutagen
+mutagen
