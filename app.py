@@ -15,7 +15,7 @@ import random
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'lamgerrsmusify654'
-DOWNLOAD_FOLDER = '../../Music/'
+DOWNLOAD_FOLDER = 'downloads'
 app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
 PREFERENCES_FILE = os.path.join(DOWNLOAD_FOLDER, '.musify_preferences.json')
 
