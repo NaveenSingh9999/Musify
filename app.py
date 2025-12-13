@@ -1425,11 +1425,3 @@ def handle_host_seek(data):
     socketio.emit('seek_to', {
         'current_time': radio_state['current_time']
     })
-
-if __name__ == '__main__':
-    socketio.run(
-    app,
-    host='0.0.0.0',
-    port=5000,
-    debug=True,
-    allow_unsafe_werkzeug=True)
