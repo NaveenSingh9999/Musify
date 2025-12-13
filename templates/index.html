@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Musify By Lamgerr</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Musify">
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            min-height: 100vh;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Ambient Background */
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(ellipse at 50% 0%, rgba(120, 80, 200, 0.15) 0%, transparent 60%),
+                        radial-gradient(ellipse at 80% 50%, rgba(200, 100, 150, 0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 20% 80%, rgba(80, 150, 200, 0.1) 0%, transparent 50%);
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 32px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.9;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .header-nav a {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .header-nav a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 40px 20px;
+            gap: 24px;
+            overflow-y: auto;
+        }
+
+        .download-card {
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .card-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .card-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .card-icon svg {
+            width: 40px;
+            height: 40px;
+            fill: #fff;
+        }
+
+        .card-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .card-subtitle {
+            font-size: 14px;
+            opacity: 0.6;
+            line-height: 1.5;
+        }
+
+        /* Form */
+        .download-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            opacity: 0.7;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            background: rgba(255,255,255,0.12);
+            border-color: rgba(255,255,255,0.25);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 8px 0;
+        }
+
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .divider-text {
+            font-size: 12px;
+            opacity: 0.5;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .batch-info {
+            text-align: center;
+            padding: 16px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+        }
+
+        .batch-info p {
+            font-size: 13px;
+            opacity: 0.7;
+            margin-bottom: 8px;
+        }
+
+        .batch-info code {
+            display: inline-block;
+            background: rgba(0,0,0,0.3);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #a78bfa;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .batch-info .example {
+            font-size: 11px;
+            opacity: 0.5;
+            margin-top: 8px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        /* Features */
+        .features {
+            margin-top: 28px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .features-title {
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 0.8;
+            margin-bottom: 12px;
+        }
+
+        .features-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+        .feature-item svg {
+            width: 14px;
+            height: 14px;
+            fill: #a78bfa;
+            flex-shrink: 0;
+        }
+
+        /* Library Link */
+        .library-link {
+            display: block;
+            text-align: center;
+            margin-top: 24px;
+            padding: 14px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            color: #a78bfa;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .library-link:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* AI Recommendations Section */
+        .recommendations-card {
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 28px;
+            max-width: 500px;
+            width: 100%;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .recommendations-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .recommendations-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .recommendations-title svg {
+            width: 24px;
+            height: 24px;
+            fill: #a78bfa;
+        }
+
+        .ai-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .learning-progress {
+            margin-bottom: 20px;
+        }
+
+        .learning-progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            opacity: 0.7;
+            margin-bottom: 6px;
+        }
+
+        .learning-progress-bar {
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .learning-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+
+        .recommendation-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .recommendation-item:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.1);
+        }
+
+        .recommendation-item.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .recommendation-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 2px solid rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .recommendation-checkbox.checked {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+        }
+
+        .recommendation-checkbox svg {
+            width: 12px;
+            height: 12px;
+            fill: white;
+            opacity: 0;
+        }
+
+        .recommendation-checkbox.checked svg {
+            opacity: 1;
+        }
+
+        .recommendation-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .recommendation-query {
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+
+        .recommendation-reason {
+            font-size: 12px;
+            opacity: 0.6;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .recommendation-type {
+            background: rgba(255,255,255,0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+
+        .confidence-indicator {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .confidence-high {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .confidence-medium {
+            background: rgba(234, 179, 8, 0.2);
+            color: #eab308;
+        }
+
+        .confidence-low {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .download-selected-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .download-selected-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);
+        }
+
+        .download-selected-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .download-selected-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .refresh-btn {
+            background: none;
+            border: none;
+            color: #a78bfa;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .refresh-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .no-recommendations {
+            text-align: center;
+            padding: 32px 16px;
+            opacity: 0.6;
+        }
+
+        .no-recommendations svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .no-recommendations p {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .no-recommendations small {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .preferences-summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .preference-tag {
+            background: rgba(255,255,255,0.08);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .preference-tag svg {
+            width: 14px;
+            height: 14px;
+            fill: #a78bfa;
+        }
+
+        /* Mode Toggle */
+        .mode-toggle-container {
+            margin-bottom: 4px;
+        }
+
+        .mode-info-label {
+            display: block;
+            font-size: 13px;
+            opacity: 0.7;
+            margin-bottom: 8px;
+        }
+
+        .mode-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+        }
+
+        .mode-label {
+            font-size: 13px;
+            opacity: 0.7;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mode-label svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .mode-label.active {
+            opacity: 1;
+            color: #a78bfa;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.15);
+            border-radius: 28px;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        .mode-description {
+            text-align: center;
+            font-size: 11px;
+            opacity: 0.5;
+            margin-top: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 540px) {
+            .header {
+                padding: 12px 16px;
+            }
+
+            .main-content {
+                padding: 20px 12px;
+            }
+
+            .download-card {
+                padding: 24px 16px;
+                border-radius: 20px;
+            }
+
+            .card-title {
+                font-size: 24px;
+            }
+
+            .features-list {
+                grid-template-columns: 1fr;
+            }
+
+            /* Recommendations Card Mobile */
+            .recommendations-card {
+                padding: 20px 14px;
+                border-radius: 20px;
+                margin-top: 16px;
+            }
+
+            .recommendations-header {
+                margin-bottom: 16px;
+            }
+
+            .recommendations-title {
+                font-size: 16px;
+                gap: 8px;
+            }
+
+            .recommendations-title svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .ai-badge {
+                font-size: 9px;
+                padding: 3px 8px;
+            }
+
+            .learning-progress {
+                margin-bottom: 16px;
+            }
+
+            .preferences-summary {
+                grid-template-columns: 1fr;
+                gap: 8px;
+                margin-bottom: 14px;
+            }
+
+            .preference-tag {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+
+            .recommendation-item {
+                padding: 12px;
+                margin-bottom: 8px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .recommendation-checkbox {
+                width: 18px;
+                height: 18px;
+            }
+
+            .recommendation-info {
+                flex: 1;
+                min-width: calc(100% - 100px);
+            }
+
+            .recommendation-query {
+                font-size: 13px;
+                white-space: normal;
+                line-height: 1.3;
+            }
+
+            .recommendation-reason {
+                font-size: 11px;
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+
+            .recommendation-type {
+                font-size: 9px;
+                padding: 2px 6px;
+            }
+
+            .confidence-indicator {
+                width: 36px;
+                height: 36px;
+                font-size: 11px;
+            }
+
+            .download-selected-btn {
+                padding: 12px;
+                font-size: 14px;
+                margin-top: 14px;
+            }
+
+            .no-recommendations {
+                padding: 24px 12px;
+            }
+
+            .no-recommendations svg {
+                width: 40px;
+                height: 40px;
+            }
+
+            .no-recommendations p {
+                font-size: 13px;
+            }
+
+            .no-recommendations small {
+                font-size: 11px;
+            }
+        }
+
+        /* Extra small screens */
+        @media (max-width: 380px) {
+            .recommendations-title {
+                font-size: 14px;
+            }
+
+            .recommendation-item {
+                padding: 10px;
+            }
+
+            .recommendation-info {
+                min-width: calc(100% - 80px);
+            }
+
+            .confidence-indicator {
+                width: 32px;
+                height: 32px;
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-title">Musify</div>
+        <nav class="header-nav">
+            <a href="/songs">Library</a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="download-card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                    </svg>
+                </div>
+                <h1 class="card-title">Download Music</h1>
+                <p class="card-subtitle">Search and download songs from YouTube with embedded metadata and cover art</p>
+            </div>
+
+            <form action="/download" method="post" class="download-form">
+                <div class="form-group">
+                    <label>Song name or YouTube URL</label>
+                    <input type="text" name="song_name" class="form-input" placeholder="e.g., Shape of You Ed Sheeran" required>
+                </div>
+
+                <div class="divider">
+                    <div class="divider-line"></div>
+                    <span class="divider-text">Batch Download</span>
+                    <div class="divider-line"></div>
+                </div>
+
+                <div class="batch-info">
+                    <p>Download multiple songs at once:</p>
+                    <code>[song1][song2][song3]</code>
+                    <p class="example">Example: [Blinding Lights][Bad Guy][Levitating]</p>
+                </div>
+
+                <div class="mode-toggle-container">
+                    <label class="mode-info-label">Download Mode</label>
+                    <div class="mode-toggle">
+                        <span class="mode-label offline-label active" id="offlineLabel">
+                            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                            Offline
+                        </span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="online_mode" value="true" id="modeToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="mode-label online-label" id="onlineLabel">
+                            <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
+                            Online
+                        </span>
+                    </div>
+                    <p class="mode-description" id="modeDescription">Save to server music library</p>
+                </div>
+
+                <input type="hidden" name="online_mode" value="false" id="hiddenModeValue">
+
+                <button type="submit" class="submit-btn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                    </svg>
+                    Download
+                </button>
+            </form>
+
+            <div class="features">
+                <h3 class="features-title">Features</h3>
+                <div class="features-list">
+                    <div class="feature-item">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        <span>Auto metadata</span>
+                    </div>
+                    <div class="feature-item">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        <span>Cover art embed</span>
+                    </div>
+                    <div class="feature-item">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        <span>Batch downloads</span>
+                    </div>
+                    <div class="feature-item">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        <span>192kbps MP3</span>
+                    </div>
+                </div>
+            </div>
+
+            <a href="/songs" class="library-link">
+                📚 Open Music Library
+            </a>
+        </div>
+
+        <!-- AI Recommendations Section -->
+        <div class="recommendations-card" id="recommendationsCard">
+            <div class="recommendations-header">
+                <div class="recommendations-title">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                    </svg>
+                    Smart Picks
+                    <span class="ai-badge">AI</span>
+                </div>
+                <button class="refresh-btn" onclick="loadRecommendations()" title="Refresh suggestions">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="learning-progress">
+                <div class="learning-progress-label">
+                    <span>Learning your taste</span>
+                    <span id="learningPercent">0%</span>
+                </div>
+                <div class="learning-progress-bar">
+                    <div class="learning-progress-fill" id="learningFill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div id="preferencesSummary" class="preferences-summary" style="display: none;"></div>
+
+            <div id="recommendationsList">
+                <div class="no-recommendations">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                    </svg>
+                    <p>No recommendations yet</p>
+                    <small>Listen to more songs to get personalized suggestions</small>
+                </div>
+            </div>
+
+            <button class="download-selected-btn" id="downloadSelectedBtn" onclick="downloadSelected()" disabled>
+                <svg viewBox="0 0 24 24">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                </svg>
+                Download Selected (<span id="selectedCount">0</span>)
+            </button>
+        </div>
+    </main>
+
+    <script>
+        const modeToggle = document.getElementById('modeToggle');
+        const offlineLabel = document.getElementById('offlineLabel');
+        const onlineLabel = document.getElementById('onlineLabel');
+        const modeDescription = document.getElementById('modeDescription');
+        const hiddenModeValue = document.getElementById('hiddenModeValue');
+
+        modeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                // Online mode
+                offlineLabel.classList.remove('active');
+                onlineLabel.classList.add('active');
+                modeDescription.textContent = 'Download directly to your device';
+                hiddenModeValue.value = 'true';
+            } else {
+                // Offline mode
+                onlineLabel.classList.remove('active');
+                offlineLabel.classList.add('active');
+                modeDescription.textContent = 'Save to server music library';
+                hiddenModeValue.value = 'false';
+            }
+        });
+
+        // ========================================
+        // AI RECOMMENDATIONS SYSTEM
+        // ========================================
+        let recommendations = [];
+        let selectedRecommendations = new Set();
+
+        async function loadRecommendations() {
+            try {
+                // Load preferences summary
+                const prefResponse = await fetch('/api/recommend/preferences');
+                const preferences = await prefResponse.json();
+                
+                // Update learning progress
+                const learningPercent = Math.min(100, preferences.learning_progress || 0);
+                document.getElementById('learningPercent').textContent = `${learningPercent}%`;
+                document.getElementById('learningFill').style.width = `${learningPercent}%`;
+                
+                // Show preferences summary if we have enough data
+                const summaryEl = document.getElementById('preferencesSummary');
+                if (preferences.top_artists?.length > 0 || preferences.top_genres?.length > 0) {
+                    let summaryHTML = '';
+                    
+                    preferences.top_artists?.slice(0, 2).forEach(artist => {
+                        summaryHTML += `
+                            <div class="preference-tag">
+                                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                                ${artist.name}
+                            </div>
+                        `;
+                    });
+                    
+                    preferences.top_genres?.slice(0, 2).forEach(genre => {
+                        summaryHTML += `
+                            <div class="preference-tag">
+                                <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                                ${genre.name}
+                            </div>
+                        `;
+                    });
+                    
+                    summaryEl.innerHTML = summaryHTML;
+                    summaryEl.style.display = summaryHTML ? 'grid' : 'none';
+                } else {
+                    summaryEl.style.display = 'none';
+                }
+                
+                // Load recommendations
+                const recResponse = await fetch('/api/recommend/download-suggestions?count=5');
+                const data = await recResponse.json();
+                recommendations = data.recommendations || [];
+                
+                renderRecommendations();
+            } catch (e) {
+                console.warn('Could not load recommendations:', e);
+            }
+        }
+
+        function renderRecommendations() {
+            const listEl = document.getElementById('recommendationsList');
+            
+            if (recommendations.length === 0) {
+                listEl.innerHTML = `
+                    <div class="no-recommendations">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                        </svg>
+                        <p>No recommendations yet</p>
+                        <small>Listen to more songs to get personalized suggestions</small>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            recommendations.forEach((rec, index) => {
+                const confidenceClass = rec.confidence >= 0.7 ? 'confidence-high' : 
+                                       rec.confidence >= 0.55 ? 'confidence-medium' : 'confidence-low';
+                const confidencePercent = Math.round(rec.confidence * 100);
+                const isSelected = selectedRecommendations.has(index);
+                
+                html += `
+                    <div class="recommendation-item ${isSelected ? 'selected' : ''}" onclick="toggleRecommendation(${index})">
+                        <div class="recommendation-checkbox ${isSelected ? 'checked' : ''}">
+                            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        </div>
+                        <div class="recommendation-info">
+                            <div class="recommendation-query">${escapeHtml(rec.query)}</div>
+                            <div class="recommendation-reason">
+                                <span class="recommendation-type">${rec.type}</span>
+                                ${escapeHtml(rec.reason)}
+                            </div>
+                        </div>
+                        <div class="confidence-indicator ${confidenceClass}">
+                            ${confidencePercent}%
+                        </div>
+                    </div>
+                `;
+            });
+            
+            listEl.innerHTML = html;
+            updateDownloadButton();
+        }
+
+        function toggleRecommendation(index) {
+            if (selectedRecommendations.has(index)) {
+                selectedRecommendations.delete(index);
+            } else {
+                // Limit to 3 selections
+                if (selectedRecommendations.size >= 3) {
+                    // Remove the first one
+                    const firstSelected = selectedRecommendations.values().next().value;
+                    selectedRecommendations.delete(firstSelected);
+                }
+                selectedRecommendations.add(index);
+            }
+            renderRecommendations();
+        }
+
+        function updateDownloadButton() {
+            const btn = document.getElementById('downloadSelectedBtn');
+            const countEl = document.getElementById('selectedCount');
+            const count = selectedRecommendations.size;
+            
+            countEl.textContent = count;
+            btn.disabled = count === 0;
+        }
+
+        async function downloadSelected() {
+            if (selectedRecommendations.size === 0) return;
+            
+            const queries = Array.from(selectedRecommendations).map(i => recommendations[i].query);
+            
+            // Create batch download format
+            const batchQuery = queries.map(q => `[${q}]`).join('');
+            
+            // Fill in the form and submit
+            const songInput = document.querySelector('input[name="song_name"]');
+            songInput.value = batchQuery;
+            
+            // Optional: show confirmation
+            const confirmed = confirm(`Download these ${queries.length} recommendations?\n\n${queries.join('\n')}`);
+            if (confirmed) {
+                document.querySelector('.download-form').submit();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load recommendations on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadRecommendations();
+        });
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registered:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

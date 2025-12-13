@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Downloading - Musify</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Musify">
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        /* Ambient Background */
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(ellipse at 50% 0%, rgba(120, 80, 200, 0.15) 0%, transparent 60%),
+                        radial-gradient(ellipse at 80% 50%, rgba(200, 100, 150, 0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 20% 80%, rgba(80, 150, 200, 0.1) 0%, transparent 50%);
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 32px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.9;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .header-nav a {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .header-nav a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            font-size: 14px;
+            opacity: 0.6;
+        }
+
+        /* Overall Progress */
+        .overall-progress {
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .progress-label {
+            font-size: 13px;
+            opacity: 0.6;
+        }
+
+        .progress-value {
+            font-size: 13px;
+            color: #a78bfa;
+            font-weight: 500;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Song Cards */
+        .songs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .song-card {
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .song-card.downloading {
+            border-color: rgba(251, 191, 36, 0.5);
+            background: rgba(251, 191, 36, 0.05);
+        }
+
+        .song-card.completed {
+            border-color: rgba(167, 139, 250, 0.5);
+            background: rgba(167, 139, 250, 0.05);
+        }
+
+        .song-card.error {
+            border-color: rgba(248, 113, 113, 0.5);
+            background: rgba(248, 113, 113, 0.05);
+        }
+
+        .song-thumb {
+            width: 56px;
+            height: 56px;
+            border-radius: 10px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .song-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .song-title {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .song-status {
+            font-size: 12px;
+            opacity: 0.6;
+            margin-bottom: 8px;
+        }
+
+        .song-progress {
+            width: 100%;
+            height: 3px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .song-progress-fill {
+            height: 100%;
+            background: #fbbf24;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .song-progress-fill.completed {
+            background: #a78bfa;
+        }
+
+        .song-progress-fill.error {
+            background: #f87171;
+        }
+
+        .song-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .song-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Log Section */
+        .log-section {
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 24px;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .log-header h3 {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .log-toggle {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .log-toggle:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .log-output {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 11px;
+            line-height: 1.6;
+            opacity: 0.7;
+        }
+
+        .log-output::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .log-output::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 3px;
+        }
+
+        .log-output::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }
+
+        /* Result Section */
+        .result-section {
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.08);
+            display: none;
+        }
+
+        .result-section.visible {
+            display: block;
+        }
+
+        .result-icon {
+            width: 64px;
+            height: 64px;
+            background: rgba(167, 139, 250, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .result-icon svg {
+            width: 32px;
+            height: 32px;
+            fill: #a78bfa;
+        }
+
+        .result-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .result-message {
+            font-size: 14px;
+            opacity: 0.6;
+            margin-bottom: 24px;
+        }
+
+        .result-btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .result-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .header {
+                padding: 12px 16px;
+            }
+
+            .main-content {
+                padding: 16px;
+            }
+
+            .page-header h1 {
+                font-size: 22px;
+            }
+
+            .song-card {
+                padding: 12px;
+                gap: 12px;
+            }
+
+            .song-thumb {
+                width: 48px;
+                height: 48px;
+            }
+        }
+
+        .download-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: rgba(167, 139, 250, 0.2);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: rgba(167, 139, 250, 0.4);
+            transform: scale(1.1);
+        }
+
+        .download-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .online-mode-hint {
+            font-size: 13px;
+            opacity: 0.7;
+            margin-bottom: 16px;
+            padding: 10px 16px;
+            background: rgba(167, 139, 250, 0.1);
+            border-radius: 8px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-title">Musify</div>
+        <nav class="header-nav">
+            <a href="/">Download</a>
+            <a href="/songs">Library</a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Downloading Music</h1>
+            <p>
+                {% if is_batch %}
+                    Downloading {{ songs|length }} songs
+                {% else %}
+                    Downloading "{{ song_name }}"
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Overall Progress -->
+        <div class="overall-progress">
+            <div class="progress-header">
+                <span class="progress-label">Overall Progress</span>
+                <span id="progress-text" class="progress-value">0 / {{ songs|length }} completed</span>
+            </div>
+            <div class="progress-track">
+                <div id="overall-progress-bar" class="progress-fill"></div>
+            </div>
+        </div>
+
+        <!-- Song Cards -->
+        <div id="songs-container" class="songs-container">
+            {% for song in songs %}
+            <div id="song-{{ loop.index }}" class="song-card">
+                <img id="thumb-{{ loop.index }}" src="{{ url_for('static', filename='default-artwork.png') }}" alt="Thumbnail" class="song-thumb">
+                <div class="song-info">
+                    <div id="title-{{ loop.index }}" class="song-title">{{ song }}</div>
+                    <div id="artist-{{ loop.index }}" class="song-status">Waiting...</div>
+                    <div class="song-progress">
+                        <div id="progress-{{ loop.index }}" class="song-progress-fill"></div>
+                    </div>
+                </div>
+                <div id="status-{{ loop.index }}" class="song-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.3">
+                        <circle cx="12" cy="12" r="10"/>
+                    </svg>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Log Section -->
+        <div class="log-section">
+            <div class="log-header">
+                <h3>Download Log</h3>
+                <button class="log-toggle" onclick="toggleLog()">Toggle</button>
+            </div>
+            <pre id="log-output" class="log-output"></pre>
+        </div>
+
+        <!-- Result Section -->
+        <div id="result" class="result-section">
+            <div class="result-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+            </div>
+            <h2 id="result-title" class="result-title">Download Complete!</h2>
+            <p id="result-message" class="result-message"></p>
+            {% if online_mode %}
+            <p class="online-mode-hint">Click the download icons above to save songs to your device</p>
+            <a href="/" class="result-btn">Download More</a>
+            {% else %}
+            <a href="/songs" class="result-btn">Open Library</a>
+            {% endif %}
+        </div>
+    </main>
+
+    <script>
+        const sessionId = "{{ session_id }}";
+        const totalSongs = {{ songs|length }};
+        const logOutput = document.getElementById('log-output');
+        const resultDiv = document.getElementById('result');
+        let completedSongs = 0;
+        let logVisible = true;
+
+        function toggleLog() {
+            logVisible = !logVisible;
+            logOutput.style.display = logVisible ? 'block' : 'none';
+        }
+
+        function log(message) {
+            logOutput.textContent += message + '\n';
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+
+        function updateOverallProgress() {
+            const percent = (completedSongs / totalSongs) * 100;
+            document.getElementById('overall-progress-bar').style.width = percent + '%';
+            document.getElementById('progress-text').textContent = `${completedSongs} / ${totalSongs} completed`;
+        }
+
+        function updateSongCard(index, status, data = {}) {
+            const card = document.getElementById(`song-${index}`);
+            const title = document.getElementById(`title-${index}`);
+            const artist = document.getElementById(`artist-${index}`);
+            const thumb = document.getElementById(`thumb-${index}`);
+            const progress = document.getElementById(`progress-${index}`);
+            const statusEl = document.getElementById(`status-${index}`);
+
+            card.classList.remove('downloading', 'completed', 'error');
+            progress.classList.remove('completed', 'error');
+
+            if (status === 'downloading') {
+                card.classList.add('downloading');
+                artist.textContent = `Downloading... ${data.progress || ''}`;
+                progress.style.width = data.progressPercent || '50%';
+                statusEl.innerHTML = '<svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="12"/></svg>';
+            } else if (status === 'completed') {
+                card.classList.add('completed');
+                if (data.title) title.textContent = data.title;
+                if (data.artist) artist.textContent = data.artist;
+                if (data.thumbnail) thumb.src = data.thumbnail;
+                progress.style.width = '100%';
+                progress.classList.add('completed');
+                
+                // For online mode, show download button
+                if (data.online_mode && data.download_url) {
+                    statusEl.innerHTML = `<a href="${data.download_url}" class="download-btn" download title="Download to device">
+                        <svg viewBox="0 0 24 24" fill="#a78bfa"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                    </a>`;
+                } else {
+                    statusEl.innerHTML = '<svg viewBox="0 0 24 24" fill="#a78bfa"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+                }
+            } else if (status === 'error') {
+                card.classList.add('error');
+                artist.textContent = `Error: ${data.error || 'Download failed'}`;
+                progress.style.width = '100%';
+                progress.classList.add('error');
+                statusEl.innerHTML = '<svg viewBox="0 0 24 24" fill="#f87171"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
+            }
+        }
+
+        // Connect to EventSource with session ID
+        const eventSource = new EventSource(`/progress/${sessionId}`);
+
+        eventSource.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                
+                switch(data.type) {
+                    case 'batch_start':
+                        log(`Starting batch download of ${data.total_songs} songs...`);
+                        break;
+                    
+                    case 'log':
+                        log(data.message);
+                        break;
+                    
+                    case 'progress':
+                        updateSongCard(data.song_index, 'downloading', {
+                            progress: data.progress_str,
+                            progressPercent: data.progress_str
+                        });
+                        break;
+                    
+                    case 'song_completed':
+                        completedSongs++;
+                        updateSongCard(data.song_index, 'completed', {
+                            title: data.title,
+                            artist: data.artist,
+                            thumbnail: data.thumbnail,
+                            download_url: data.download_url,
+                            online_mode: data.online_mode
+                        });
+                        updateOverallProgress();
+                        log(`✓ [${data.song_index}/${data.total_songs}] "${data.title}" by ${data.artist}`);
+                        break;
+                    
+                    case 'song_error':
+                        completedSongs++;
+                        updateSongCard(data.song_index, 'error', {
+                            error: data.error
+                        });
+                        updateOverallProgress();
+                        log(`✗ [${data.song_index}/${data.total_songs}] Failed: ${data.song_name}`);
+                        break;
+                    
+                    case 'completed':
+                        resultDiv.classList.add('visible');
+                        document.getElementById('result-title').textContent = 'Download Complete!';
+                        document.getElementById('result-message').textContent = 
+                            `Successfully downloaded ${data.successful} of ${data.total_songs} songs.`;
+                        log(`\n=== Batch Download Complete ===`);
+                        log(`Successful: ${data.successful}, Failed: ${data.failed}`);
+                        eventSource.close();
+                        break;
+                    
+                    case 'error':
+                        log(`Error: ${data.message}`);
+                        resultDiv.classList.add('visible');
+                        document.getElementById('result-title').textContent = 'Download Error';
+                        document.getElementById('result-message').textContent = data.message;
+                        eventSource.close();
+                        break;
+                }
+            } catch (e) {
+                log('Error parsing message: ' + e.message);
+            }
+        };
+
+        eventSource.onerror = function(err) {
+            console.error("EventSource error:", err);
+            log('Connection error. The download may still be in progress on the server.');
+            setTimeout(() => {
+                if (eventSource.readyState === EventSource.CLOSED) {
+                    log('Connection closed.');
+                }
+            }, 3000);
+        };
+    </script>
+</body>
+</html>
