@@ -15,7 +15,7 @@ import random
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'lamgerrsmusify654'
-DOWNLOAD_FOLDER = 'downloads'
+DOWNLOAD_FOLDER = '../../Music/'
 app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
 PREFERENCES_FILE = os.path.join(DOWNLOAD_FOLDER, '.musify_preferences.json')
 
@@ -1056,7 +1056,7 @@ def get_stream_url(video_id):
 
 @app.route('/api/stream/video/<video_id>')
 def get_video_stream_url(video_id):
-    """Get direct video stream URL for a YouTube video (for custom player)."""
+    """Get video info and proxy URL for a YouTube video (for custom player)."""
     try:
         ydl_opts = {
             'quiet': True,
@@ -1067,35 +1067,109 @@ def get_video_stream_url(video_id):
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(f'https://www.youtube.com/watch?v={video_id}', download=False)
         
-        # Get video URL
-        video_url = info.get('url')
-        
-        # If no direct URL, try to find from formats
-        if not video_url:
-            formats = info.get('formats', [])
-            # Look for mp4 format with both audio and video
-            for f in reversed(formats):
-                if f.get('ext') == 'mp4' and f.get('acodec') != 'none' and f.get('vcodec') != 'none':
-                    height = f.get('height', 0) or 0
-                    if height <= 720:
-                        video_url = f.get('url')
-                        break
-            
-            # Fallback to any playable format
-            if not video_url and formats:
-                for f in reversed(formats):
-                    if f.get('acodec') != 'none' and f.get('vcodec') != 'none':
-                        video_url = f.get('url')
-                        break
+        # Use our proxy URL instead of direct YouTube URL (to avoid CORS)
+        proxy_url = f'/api/stream/video-proxy/{video_id}'
         
         return jsonify({
-            'video_url': video_url,
+            'video_url': proxy_url,
             'title': info.get('title', 'Unknown'),
             'channel': info.get('channel', info.get('uploader', 'Unknown Artist')),
             'duration': info.get('duration', 0),
             'thumbnail': info.get('thumbnail', f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg"),
             'video_id': video_id
         })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Video stream cache to avoid repeated yt-dlp calls
+video_stream_cache = {}
+VIDEO_CACHE_TTL = 3600  # 1 hour
+
+@app.route('/api/stream/video-proxy/<video_id>')
+def video_proxy(video_id):
+    """Proxy video stream to avoid CORS issues."""
+    try:
+        # Check cache
+        cache_key = f"video_{video_id}"
+        now = time.time()
+        
+        if cache_key in video_stream_cache:
+            cached = video_stream_cache[cache_key]
+            if now - cached['timestamp'] < VIDEO_CACHE_TTL:
+                video_url = cached['url']
+            else:
+                del video_stream_cache[cache_key]
+                video_url = None
+        else:
+            video_url = None
+        
+        # Fetch new URL if not cached
+        if not video_url:
+            ydl_opts = {
+                'quiet': True,
+                'no_warnings': True,
+                'format': 'best[height<=720][ext=mp4]/best[height<=720]/best',
+            }
+            
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(f'https://www.youtube.com/watch?v={video_id}', download=False)
+            
+            video_url = info.get('url')
+            
+            if not video_url:
+                formats = info.get('formats', [])
+                for f in reversed(formats):
+                    if f.get('ext') == 'mp4' and f.get('acodec') != 'none' and f.get('vcodec') != 'none':
+                        height = f.get('height', 0) or 0
+                        if height <= 720:
+                            video_url = f.get('url')
+                            break
+                
+                if not video_url and formats:
+                    for f in reversed(formats):
+                        if f.get('acodec') != 'none' and f.get('vcodec') != 'none':
+                            video_url = f.get('url')
+                            break
+            
+            # Cache the URL
+            if video_url:
+                video_stream_cache[cache_key] = {
+                    'url': video_url,
+                    'timestamp': now
+                }
+        
+        if not video_url:
+            return jsonify({'error': 'Could not get video URL'}), 404
+        
+        # Get range header for seeking support
+        range_header = request.headers.get('Range')
+        headers = {}
+        if range_header:
+            headers['Range'] = range_header
+        
+        # Stream the video through our server
+        resp = requests.get(video_url, headers=headers, stream=True)
+        
+        # Build response headers
+        response_headers = {
+            'Content-Type': resp.headers.get('Content-Type', 'video/mp4'),
+            'Accept-Ranges': 'bytes',
+            'Access-Control-Allow-Origin': '*',
+        }
+        
+        if 'Content-Length' in resp.headers:
+            response_headers['Content-Length'] = resp.headers['Content-Length']
+        if 'Content-Range' in resp.headers:
+            response_headers['Content-Range'] = resp.headers['Content-Range']
+        
+        def generate():
+            for chunk in resp.iter_content(chunk_size=8192):
+                yield chunk
+        
+        status_code = resp.status_code
+        return Response(generate(), status=status_code, headers=response_headers)
+        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -1427,4 +1501,9 @@ def handle_host_seek(data):
     })
 
 if __name__ == '__main__':
-    socketio.run(app,host='0.0.0.0',port=os.getenv("PORT", default=5000),debug=True,allow_unsafe_werkzeug=True)
+    socketio.run(
+    app,
+    host='0.0.0.0',
+    port=5000,
+    debug=True,
+    allow_unsafe_werkzeug=True)

@@ -4,6 +4,5 @@ beautifulsoup4
 yt-dlp
 ffmpeg-python
 mutagen
-gunicorn
-flask-socketio
-eventlet
+mutagen
+mutagen
