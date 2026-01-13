@@ -135,6 +135,126 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
+        /* Install Button */
+        .install-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+            animation: pulse-install 2s infinite;
+        }
+
+        .install-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+        }
+
+        .install-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        @keyframes pulse-install {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+        }
+
+        /* PWA Install Banner */
+        .pwa-install-banner {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.95) 0%, rgba(22, 163, 74, 0.95) 100%);
+            backdrop-filter: blur(10px);
+            padding: 16px 24px;
+            border-radius: 16px;
+            display: none;
+            align-items: center;
+            gap: 16px;
+            z-index: 10000;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 90%;
+            width: 400px;
+        }
+
+        .pwa-install-banner.visible {
+            display: flex;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        .pwa-install-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .pwa-install-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: #fff;
+        }
+
+        .pwa-install-content {
+            flex: 1;
+        }
+
+        .pwa-install-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .pwa-install-desc {
+            font-size: 13px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .pwa-install-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pwa-install-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pwa-install-btn.primary {
+            background: #fff;
+            color: #16a34a;
+        }
+
+        .pwa-install-btn.primary:hover {
+            transform: scale(1.05);
+        }
+
+        .pwa-install-btn.secondary {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+        }
+
+        .pwa-install-btn.secondary:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
         /* Search Button */
         .search-nav-btn {
             display: flex;
@@ -1345,6 +1465,194 @@
             opacity: 1;
         }
 
+        .secondary-btn.timer-active {
+            color: #f59e0b;
+            opacity: 1;
+        }
+
+        /* Sleep Timer Modal */
+        .sleep-timer-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sleep-timer-modal.visible {
+            display: flex;
+            opacity: 1;
+        }
+
+        .sleep-timer-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .sleep-timer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .sleep-timer-title {
+            font-size: 22px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sleep-timer-title svg {
+            width: 28px;
+            height: 28px;
+            fill: #f59e0b;
+        }
+
+        .sleep-timer-close {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .sleep-timer-close:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .sleep-timer-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .timer-option {
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .timer-option:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .timer-option.selected {
+            background: rgba(245,158,11,0.2);
+            border-color: #f59e0b;
+        }
+
+        .timer-option-label {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .timer-option-desc {
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+        .timer-countdown {
+            background: rgba(245,158,11,0.1);
+            border: 1px solid rgba(245,158,11,0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .timer-countdown-time {
+            font-size: 32px;
+            font-weight: 700;
+            color: #f59e0b;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .timer-countdown-label {
+            font-size: 12px;
+            opacity: 0.6;
+            margin-top: 4px;
+        }
+
+        .timer-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .timer-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .timer-btn-start {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #fff;
+        }
+
+        .timer-btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245,158,11,0.4);
+        }
+
+        .timer-btn-cancel {
+            background: rgba(239,68,68,0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239,68,68,0.3);
+        }
+
+        .timer-btn-cancel:hover {
+            background: rgba(239,68,68,0.3);
+        }
+
+        .timer-btn-stop {
+            background: rgba(239,68,68,0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239,68,68,0.3);
+        }
+
+        .timer-btn-stop:hover {
+            background: rgba(239,68,68,0.3);
+        }
+
         /* Volume Control */
         .volume-control {
             display: flex;
@@ -1663,6 +1971,78 @@
             height: 80px;
             background: rgba(0,0,0,0.3);
             border-radius: 8px;
+        }
+
+        /* Crossfade Settings */
+        .crossfade-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .crossfade-label {
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .crossfade-switch {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            cursor: pointer;
+        }
+
+        .crossfade-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .crossfade-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.2);
+            border-radius: 26px;
+            transition: all 0.3s ease;
+        }
+
+        .crossfade-slider:before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .crossfade-switch input:checked + .crossfade-slider {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .crossfade-switch input:checked + .crossfade-slider:before {
+            transform: translateX(22px);
+        }
+
+        .crossfade-duration {
+            margin-top: 12px;
+            opacity: 0.5;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .crossfade-duration.active {
+            opacity: 1;
+            pointer-events: all;
         }
 
         /* Mobile Wave Engine */
@@ -2967,6 +3347,12 @@
                 </div>
 
                 <a href="/">Download</a>
+                <button id="installBtn" class="install-btn" title="Install Musify App" style="display:none;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                    </svg>
+                    Install
+                </button>
                 <button id="radioBtn" class="radio-btn" title="Live Radio">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M3.24 6.15C2.51 6.43 2 7.17 2 8v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2H8.3l8.26-3.34L15.88 1 3.24 6.15M7 20a2 2 0 0 1-2-2 2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1-2 2m13-8h-2v-2h-2v2H4v2h12v2h2v-2h2v-2Z"/>
@@ -3144,9 +3530,10 @@
                 </div>
 
                 <div class="library-controls">
-                    <h2 class="playlist-header">Library</h2>
+                    <h2 class="playlist-header">{% if on_host %}Trending{% else %}Library{% endif %}</h2>
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <span class="library-count" id="libraryCount">{{ songs|length }} songs</span>
+                        <span class="library-count" id="libraryCount">{% if on_host %}{{ trending_songs|length }} trending{% else %}{{ songs|length }} songs{% endif %}</span>
+                        {% if not on_host %}
                         <div class="library-view-toggle">
                             <button class="view-toggle-btn active" id="listViewBtn" onclick="setLibraryView('list')" title="List view">
                                 <svg viewBox="0 0 24 24"><path d="M4 14h4v-4H4v4zm0 5h4v-4H4v4zM4 9h4V5H4v4zm5 5h12v-4H9v4zm0 5h12v-4H9v4zM9 5v4h12V5H9z"/></svg>
@@ -3160,6 +3547,7 @@
                             <option value="name-desc">Z-A</option>
                             <option value="recent">Recent</option>
                         </select>
+                        {% endif %}
                     </div>
                 </div>
                 <!-- Search Box -->
@@ -3167,9 +3555,54 @@
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                     </svg>
-                    <input type="text" id="searchInput" placeholder="Filter library...">
+                    <input type="text" id="searchInput" placeholder="{% if on_host %}Search trending...{% else %}Filter library...{% endif %}">
                 </div>
+                
+                {% if on_host %}
+                <!-- Demo Mode Banner -->
+                <div style="background: linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="#eab308">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                    </svg>
+                    <div>
+                        <div style="font-size: 13px; font-weight: 600; color: #eab308;">Demo Mode</div>
+                        <div style="font-size: 11px; opacity: 0.7;">{{ demo_duration }}s preview • Stream from YouTube</div>
+                    </div>
+                </div>
+                {% endif %}
+                
                 <ul id="playlist">
+                    {% if on_host %}
+                    <!-- Trending Songs (ON_HOST mode) -->
+                    {% for song in trending_songs %}
+                    <li class="playlist-item trending-item" data-index="{{ loop.index0 }}" data-video-id="{{ song.id }}" data-title="{{ song.title }}" data-artist="{{ song.artist }}" data-thumbnail="{{ song.thumbnail }}" data-duration="{{ song.duration_secs }}">
+                        <img class="playlist-item-thumb" src="{{ song.thumbnail }}" alt="Cover" onerror="this.src='{{ url_for('static', filename='default-artwork.png') }}'">
+                        <div class="playlist-item-info">
+                            <div class="playlist-item-title">{{ song.title }}</div>
+                            <div class="playlist-item-artist">{{ song.artist }}</div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                                <span style="font-size: 11px; opacity: 0.5;">{{ song.duration }}</span>
+                                <span style="background: linear-gradient(135deg, #ef4444, #dc2626); padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 600;">TRENDING</span>
+                            </div>
+                            <div class="mini-progress">
+                                <div class="mini-progress-bar"></div>
+                            </div>
+                        </div>
+                        <button class="playlist-item-menu" onclick="event.stopPropagation();">
+                            <svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                        </button>
+                    </li>
+                    {% else %}
+                    <li class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                        </svg>
+                        <p>Loading trending songs...</p>
+                        <p style="font-size: 14px; margin-top: 8px;">Please wait while we fetch the latest hits</p>
+                    </li>
+                    {% endfor %}
+                    {% else %}
+                    <!-- Local Library Songs -->
                     {% for song in songs %}
                     <li class="playlist-item" data-index="{{ loop.index0 }}" data-src="{{ url_for('play', filename=song) }}" data-title="{{ song[:-4] if song.endswith('.mp3') else song }}" data-file="{{ song }}">
                         <img class="playlist-item-thumb" src="{{ url_for('cover', filename=song) }}" alt="Cover" onerror="this.src='{{ url_for('static', filename='default-artwork.png') }}'">
@@ -3193,6 +3626,7 @@
                         <p style="font-size: 14px; margin-top: 8px;">Download some music to get started</p>
                     </li>
                     {% endfor %}
+                    {% endif %}
                 </ul>
             </aside>
 
@@ -3280,6 +3714,11 @@
                     <button class="secondary-btn" id="likeBtn" title="Like">
                         <svg viewBox="0 0 24 24">
                             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                    </button>
+                    <button class="secondary-btn" id="sleepTimerBtn" title="Sleep Timer">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z"/>
                         </svg>
                     </button>
                     <button class="secondary-btn wave-engine-toggle" id="waveEngineToggle" title="Wave Engine">
@@ -3408,6 +3847,30 @@
                     </div>
                 </div>
 
+                <!-- Crossfade -->
+                <div class="wave-section">
+                    <div class="wave-section-title">Crossfade</div>
+                    <div class="crossfade-toggle">
+                        <div class="crossfade-label">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                                <path d="M7 17.5l4.5-4.5L16 17.5V7.5l-4.5 4.5L7 7.5z"/>
+                            </svg>
+                            Enable Crossfade
+                        </div>
+                        <label class="crossfade-switch">
+                            <input type="checkbox" id="crossfadeToggle">
+                            <span class="crossfade-slider"></span>
+                        </label>
+                    </div>
+                    <div class="crossfade-duration" id="crossfadeDurationSection">
+                        <div class="wave-control-label">Crossfade Duration</div>
+                        <div class="wave-slider-group">
+                            <input type="range" class="wave-slider" id="crossfadeDuration" min="2" max="12" value="6" step="1">
+                            <span class="wave-slider-value" id="crossfadeDurationValue">6s</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Visualizer -->
                 <div class="wave-section">
                     <div class="wave-section-title">Visualizer</div>
@@ -3415,6 +3878,67 @@
                 </div>
             </div>
         </main>
+
+        <!-- Sleep Timer Modal -->
+        <div class="sleep-timer-modal" id="sleepTimerModal">
+            <div class="sleep-timer-content">
+                <div class="sleep-timer-header">
+                    <div class="sleep-timer-title">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z"/>
+                        </svg>
+                        Sleep Timer
+                    </div>
+                    <button class="sleep-timer-close" onclick="closeSleepTimer()">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div id="timerSetup">
+                    <div class="sleep-timer-options">
+                        <div class="timer-option" data-minutes="15">
+                            <div class="timer-option-label">15 min</div>
+                            <div class="timer-option-desc">Quick nap</div>
+                        </div>
+                        <div class="timer-option" data-minutes="30">
+                            <div class="timer-option-label">30 min</div>
+                            <div class="timer-option-desc">Short rest</div>
+                        </div>
+                        <div class="timer-option" data-minutes="45">
+                            <div class="timer-option-label">45 min</div>
+                            <div class="timer-option-desc">Meditation</div>
+                        </div>
+                        <div class="timer-option" data-minutes="60">
+                            <div class="timer-option-label">60 min</div>
+                            <div class="timer-option-desc">Deep sleep</div>
+                        </div>
+                        <div class="timer-option" data-minutes="90">
+                            <div class="timer-option-label">90 min</div>
+                            <div class="timer-option-desc">Full cycle</div>
+                        </div>
+                        <div class="timer-option" data-minutes="-1">
+                            <div class="timer-option-label">End track</div>
+                            <div class="timer-option-desc">Current song</div>
+                        </div>
+                    </div>
+                    <div class="timer-actions">
+                        <button class="timer-btn timer-btn-start" onclick="startSleepTimer()">Start Timer</button>
+                    </div>
+                </div>
+
+                <div id="timerActive" style="display: none;">
+                    <div class="timer-countdown">
+                        <div class="timer-countdown-time" id="timerDisplay">00:00</div>
+                        <div class="timer-countdown-label">Time remaining</div>
+                    </div>
+                    <div class="timer-actions">
+                        <button class="timer-btn timer-btn-stop" onclick="stopSleepTimer()">Stop Timer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Mini Player (Mobile) -->
         <div class="mini-player" id="miniPlayer" onclick="expandPlayer()">
@@ -3448,6 +3972,23 @@
         </button>
     </div>
 
+    <!-- PWA Install Banner -->
+    <div id="pwaInstallBanner" class="pwa-install-banner">
+        <div class="pwa-install-icon">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+            </svg>
+        </div>
+        <div class="pwa-install-content">
+            <div class="pwa-install-title">Install Musify</div>
+            <div class="pwa-install-desc">Add to your home screen for quick access</div>
+        </div>
+        <div class="pwa-install-actions">
+            <button class="pwa-install-btn primary" onclick="installPWA()">Install</button>
+            <button class="pwa-install-btn secondary" onclick="dismissInstallBanner()">Later</button>
+        </div>
+    </div>
+
     <audio id="audio" preload="metadata"></audio>
     <audio id="streamingAudio" preload="metadata"></audio>
 
@@ -3456,6 +3997,13 @@
 
     <script>
         // Musify Player with Ambient Mode
+        
+        // App Configuration (from server)
+        const APP_CONFIG = {
+            onHost: {{ 'true' if on_host else 'false' }},
+            demoDuration: {{ demo_duration if demo_duration else 'null' }}
+        };
+        
         document.addEventListener('DOMContentLoaded', () => {
             const playlist = document.getElementById('playlist');
             const audio = document.getElementById('audio');
@@ -3499,6 +4047,257 @@
             let repeatMode = 0; // 0: off, 1: all, 2: one
             let isMobile = window.innerWidth <= 768;
             
+            // Sleep Timer
+            let sleepTimerActive = false;
+            let sleepTimerMinutes = 0;
+            let sleepTimerEndTime = null;
+            let sleepTimerInterval = null;
+            let sleepTimerEndTrack = false;
+            
+            // Crossfade
+            let crossfadeEnabled = false;
+            let crossfadeDuration = 6; // seconds
+            let crossfading = false;
+            let nextTrackAudio = null;
+            
+            // ========================================
+            // SLEEP TIMER FUNCTIONS
+            // ========================================
+            window.openSleepTimer = function() {
+                const modal = document.getElementById('sleepTimerModal');
+                modal.classList.add('visible');
+                
+                // Update UI based on current timer state
+                if (sleepTimerActive) {
+                    document.getElementById('timerSetup').style.display = 'none';
+                    document.getElementById('timerActive').style.display = 'block';
+                } else {
+                    document.getElementById('timerSetup').style.display = 'block';
+                    document.getElementById('timerActive').style.display = 'none';
+                }
+            };
+            
+            window.closeSleepTimer = function() {
+                const modal = document.getElementById('sleepTimerModal');
+                modal.classList.remove('visible');
+            };
+            
+            window.startSleepTimer = function() {
+                const selectedOption = document.querySelector('.timer-option.selected');
+                if (!selectedOption) return;
+                
+                const minutes = parseInt(selectedOption.dataset.minutes);
+                
+                if (minutes === -1) {
+                    // End of current track mode
+                    sleepTimerEndTrack = true;
+                    sleepTimerActive = true;
+                    sleepTimerMinutes = -1;
+                    document.getElementById('sleepTimerBtn').classList.add('timer-active');
+                    closeSleepTimer();
+                    console.log('Sleep timer set to end after current track');
+                } else {
+                    // Time-based timer
+                    sleepTimerMinutes = minutes;
+                    sleepTimerEndTime = Date.now() + (minutes * 60 * 1000);
+                    sleepTimerActive = true;
+                    sleepTimerEndTrack = false;
+                    
+                    // Update UI
+                    document.getElementById('timerSetup').style.display = 'none';
+                    document.getElementById('timerActive').style.display = 'block';
+                    document.getElementById('sleepTimerBtn').classList.add('timer-active');
+                    
+                    // Start countdown
+                    updateTimerDisplay();
+                    sleepTimerInterval = setInterval(updateTimerDisplay, 1000);
+                    
+                    console.log(`Sleep timer set for ${minutes} minutes`);
+                }
+            };
+            
+            window.stopSleepTimer = function() {
+                sleepTimerActive = false;
+                sleepTimerEndTrack = false;
+                if (sleepTimerInterval) {
+                    clearInterval(sleepTimerInterval);
+                    sleepTimerInterval = null;
+                }
+                document.getElementById('sleepTimerBtn').classList.remove('timer-active');
+                closeSleepTimer();
+                console.log('Sleep timer stopped');
+            };
+            
+            function updateTimerDisplay() {
+                if (!sleepTimerActive || sleepTimerEndTrack) return;
+                
+                const remaining = sleepTimerEndTime - Date.now();
+                
+                if (remaining <= 0) {
+                    // Timer finished
+                    fadeOutAndStop();
+                    return;
+                }
+                
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                document.getElementById('timerDisplay').textContent = 
+                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+            
+            function fadeOutAndStop() {
+                const currentAudio = isStreamingPlayback ? streamingAudio : audio;
+                const originalVolume = currentAudio.volume;
+                const fadeSteps = 30;
+                const fadeInterval = 2000 / fadeSteps; // 2 second fade
+                let step = 0;
+                
+                const fadeIntervalId = setInterval(() => {
+                    step++;
+                    currentAudio.volume = originalVolume * (1 - step / fadeSteps);
+                    
+                    if (step >= fadeSteps) {
+                        clearInterval(fadeIntervalId);
+                        pause();
+                        currentAudio.volume = originalVolume;
+                        stopSleepTimer();
+                        console.log('Sleep timer: Music stopped with fade-out');
+                    }
+                }, fadeInterval);
+            }
+            
+            // Timer option selection
+            document.addEventListener('click', (e) => {
+                const option = e.target.closest('.timer-option');
+                if (option) {
+                    document.querySelectorAll('.timer-option').forEach(o => o.classList.remove('selected'));
+                    option.classList.add('selected');
+                }
+            });
+            
+            // Sleep timer button click
+            document.getElementById('sleepTimerBtn')?.addEventListener('click', openSleepTimer);
+            
+            // Close modal on outside click
+            document.getElementById('sleepTimerModal')?.addEventListener('click', (e) => {
+                if (e.target.id === 'sleepTimerModal') {
+                    closeSleepTimer();
+                }
+            });
+
+            // ========================================
+            // CROSSFADE FUNCTIONS
+            // ========================================
+            function initCrossfade() {
+                const crossfadeToggle = document.getElementById('crossfadeToggle');
+                const crossfadeDurationSlider = document.getElementById('crossfadeDuration');
+                const crossfadeDurationSection = document.getElementById('crossfadeDurationSection');
+                const crossfadeDurationValue = document.getElementById('crossfadeDurationValue');
+                
+                if (crossfadeToggle) {
+                    crossfadeToggle.addEventListener('change', (e) => {
+                        crossfadeEnabled = e.target.checked;
+                        if (crossfadeDurationSection) {
+                            crossfadeDurationSection.classList.toggle('active', crossfadeEnabled);
+                        }
+                        console.log('Crossfade', crossfadeEnabled ? 'enabled' : 'disabled');
+                    });
+                }
+                
+                if (crossfadeDurationSlider) {
+                    crossfadeDurationSlider.addEventListener('input', (e) => {
+                        crossfadeDuration = parseInt(e.target.value);
+                        if (crossfadeDurationValue) {
+                            crossfadeDurationValue.textContent = crossfadeDuration + 's';
+                        }
+                    });
+                }
+            }
+            
+            function preloadNextTrack() {
+                if (!crossfadeEnabled || crossfading) return;
+                
+                // Calculate next track index
+                let nextIdx;
+                if (isShuffled && isSmartShuffleEnabled) {
+                    // Peek at next smart shuffle without consuming it
+                    const scored = getSmartShuffleScored();
+                    if (scored && scored.length > 0) {
+                        const nextSong = scored[0];
+                        nextIdx = tracks.findIndex(t => t.dataset.file === nextSong.name);
+                    }
+                } else if (isShuffled) {
+                    nextIdx = Math.floor(Math.random() * tracks.length);
+                } else {
+                    nextIdx = currentIndex < tracks.length - 1 ? currentIndex + 1 : 0;
+                }
+                
+                if (nextIdx >= 0 && nextIdx < tracks.length) {
+                    const nextTrack = tracks[nextIdx];
+                    if (!nextTrackAudio) {
+                        nextTrackAudio = new Audio();
+                        nextTrackAudio.volume = 0;
+                    }
+                    nextTrackAudio.src = nextTrack.dataset.src;
+                    nextTrackAudio.load();
+                }
+            }
+            
+            function performCrossfade() {
+                if (!crossfadeEnabled || crossfading || !nextTrackAudio || !nextTrackAudio.src) {
+                    return false;
+                }
+                
+                crossfading = true;
+                const fadeTime = crossfadeDuration * 1000;
+                const steps = 60; // 60 steps for smooth fade
+                const stepTime = fadeTime / steps;
+                let step = 0;
+                
+                const originalVolume = audio.volume;
+                nextTrackAudio.volume = 0;
+                
+                // Start next track
+                nextTrackAudio.play().catch(err => {
+                    console.warn('Crossfade: Failed to play next track', err);
+                    crossfading = false;
+                    return;
+                });
+                
+                const fadeInterval = setInterval(() => {
+                    step++;
+                    const progress = step / steps;
+                    
+                    // Fade out current
+                    audio.volume = originalVolume * (1 - progress);
+                    // Fade in next
+                    nextTrackAudio.volume = originalVolume * progress;
+                    
+                    if (step >= steps) {
+                        clearInterval(fadeInterval);
+                        
+                        // Switch to next track
+                        audio.pause();
+                        audio.src = nextTrackAudio.src;
+                        audio.currentTime = nextTrackAudio.currentTime;
+                        audio.volume = originalVolume;
+                        
+                        // Clear next track audio
+                        nextTrackAudio.pause();
+                        nextTrackAudio.src = '';
+                        
+                        crossfading = false;
+                        
+                        // Continue playing
+                        audio.play();
+                        
+                        console.log('Crossfade completed');
+                    }
+                }, stepTime);
+                
+                return true;
+            }
+
             // ========================================
             // MOBILE PLAYER FUNCTIONS
             // ========================================
@@ -4525,6 +5324,9 @@
             
             // Initialize streaming mode on load
             setTimeout(initStreamingMode, 100);
+            
+            // Initialize crossfade
+            initCrossfade();
 
             // ========================================
             // WAVE ENGINE INTEGRATION
@@ -4963,6 +5765,29 @@
 
             // Event Listeners
             playlist.addEventListener('click', (e) => {
+                // Handle trending items (ON_HOST mode - stream from YouTube)
+                const trendingLi = e.target.closest('.playlist-item.trending-item[data-video-id]');
+                if (trendingLi) {
+                    const videoId = trendingLi.dataset.videoId;
+                    const title = trendingLi.dataset.title;
+                    const artist = trendingLi.dataset.artist;
+                    const thumbnail = trendingLi.dataset.thumbnail;
+                    
+                    // Highlight the trending item
+                    document.querySelectorAll('.playlist-item').forEach(item => item.classList.remove('active'));
+                    trendingLi.classList.add('active');
+                    
+                    // Play the streaming track
+                    playStreamingTrack(videoId, title);
+                    
+                    // On mobile, expand the player
+                    if (isMobile) {
+                        expandPlayer();
+                    }
+                    return;
+                }
+                
+                // Handle local library items
                 const li = e.target.closest('.playlist-item[data-src]');
                 if (!li) return;
                 const index = tracks.indexOf(li);
@@ -5015,6 +5840,33 @@
                 progressBar.style.width = percent + '%';
                 currentTimeEl.textContent = formatTime(audio.currentTime);
                 updateMiniProgress();
+                
+                // Crossfade: preload next track when near end
+                const timeRemaining = audio.duration - audio.currentTime;
+                if (crossfadeEnabled && !crossfading && timeRemaining <= crossfadeDuration + 2 && timeRemaining > crossfadeDuration) {
+                    preloadNextTrack();
+                }
+                
+                // Crossfade: start crossfade at the right time
+                if (crossfadeEnabled && !crossfading && timeRemaining <= crossfadeDuration && timeRemaining > 0.5) {
+                    const crossfadeStarted = performCrossfade();
+                    if (crossfadeStarted) {
+                        // Move to next track in playlist
+                        let idx;
+                        if (isShuffled && isSmartShuffleEnabled) {
+                            idx = getNextSmartShuffleIndex();
+                        } else if (isShuffled) {
+                            idx = Math.floor(Math.random() * tracks.length);
+                        } else {
+                            idx = currentIndex < tracks.length - 1 ? currentIndex + 1 : 0;
+                        }
+                        currentIndex = idx;
+                        highlightCurrent();
+                        updateNowPlayingUI(tracks[idx]);
+                        recordTrackLeave(true, false); // Record previous track
+                        onTrackStart(); // Start tracking new track
+                    }
+                }
             });
 
             audio.addEventListener('loadedmetadata', () => {
@@ -5024,6 +5876,12 @@
             audio.addEventListener('ended', () => {
                 // Record completed playback
                 recordTrackLeave(true, false);
+                
+                // Check sleep timer (end of track mode)
+                if (sleepTimerActive && sleepTimerEndTrack) {
+                    fadeOutAndStop();
+                    return;
+                }
                 
                 if (repeatMode === 2) {
                     audio.currentTime = 0;
@@ -5081,8 +5939,33 @@
             // Streaming audio event listeners (mirror main audio behavior)
             streamingAudio.addEventListener('timeupdate', () => {
                 if (!isStreamingPlayback || !streamingAudio.duration) return;
-                const percent = (streamingAudio.currentTime / streamingAudio.duration) * 100;
-                progressBar.style.width = percent + '%';
+                
+                // Demo duration limit for ON_HOST mode
+                if (APP_CONFIG.onHost && APP_CONFIG.demoDuration) {
+                    if (streamingAudio.currentTime >= APP_CONFIG.demoDuration) {
+                        // Skip to next track after demo duration
+                        streamingAudio.pause();
+                        if (streamingQueue.length > 0) {
+                            const next = streamingQueue.shift();
+                            playStreamingTrack(next.id, next.title);
+                        } else {
+                            isPlaying = false;
+                            updatePlayIcon();
+                            // Show demo ended message
+                            trackArtist.textContent = 'Demo ended - ' + APP_CONFIG.demoDuration + 's preview';
+                        }
+                        return;
+                    }
+                    // Show remaining demo time in duration
+                    const remaining = APP_CONFIG.demoDuration - streamingAudio.currentTime;
+                    durationEl.textContent = formatTime(APP_CONFIG.demoDuration) + ' preview';
+                }
+                
+                const effectiveDuration = APP_CONFIG.onHost && APP_CONFIG.demoDuration 
+                    ? Math.min(streamingAudio.duration, APP_CONFIG.demoDuration) 
+                    : streamingAudio.duration;
+                const percent = (streamingAudio.currentTime / effectiveDuration) * 100;
+                progressBar.style.width = Math.min(percent, 100) + '%';
                 currentTimeEl.textContent = formatTime(streamingAudio.currentTime);
                 updateMiniProgress();
             });
@@ -5710,16 +6593,159 @@
             if (streamSearchInput) streamSearchInput.value = '';
         }
 
+        // ========================================
+        // PWA INSTALLATION
+        // ========================================
+        let deferredPrompt = null;
+        const installBtn = document.getElementById('installBtn');
+        const pwaInstallBanner = document.getElementById('pwaInstallBanner');
+        
+        // Check if app is already installed
+        function isAppInstalled() {
+            // Check if running in standalone mode
+            if (window.matchMedia('(display-mode: standalone)').matches) return true;
+            if (window.navigator.standalone === true) return true; // iOS
+            if (document.referrer.includes('android-app://')) return true;
+            return false;
+        }
+        
+        // Show install UI
+        function showInstallUI() {
+            if (installBtn) {
+                installBtn.style.display = 'flex';
+            }
+            // Show banner after a delay if not dismissed recently
+            const dismissed = localStorage.getItem('musify_install_dismissed');
+            const dismissedTime = dismissed ? parseInt(dismissed) : 0;
+            const hoursSinceDismissed = (Date.now() - dismissedTime) / (1000 * 60 * 60);
+            
+            if (hoursSinceDismissed > 24 && pwaInstallBanner) {
+                setTimeout(() => {
+                    pwaInstallBanner.classList.add('visible');
+                }, 5000); // Show after 5 seconds
+            }
+        }
+        
+        // Hide install UI
+        function hideInstallUI() {
+            if (installBtn) {
+                installBtn.style.display = 'none';
+            }
+            if (pwaInstallBanner) {
+                pwaInstallBanner.classList.remove('visible');
+            }
+        }
+        
+        // Install PWA function
+        window.installPWA = async function() {
+            if (!deferredPrompt) {
+                // Show manual install instructions for browsers that don't support beforeinstallprompt
+                alert('To install Musify:\n\n• Chrome/Edge: Click the install icon in the address bar\n• Safari (iOS): Tap Share → Add to Home Screen\n• Firefox: Use the menu to install as app');
+                return;
+            }
+            
+            // Show the install prompt
+            deferredPrompt.prompt();
+            
+            // Wait for user response
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log('[PWA] Install outcome:', outcome);
+            
+            // Clear the prompt
+            deferredPrompt = null;
+            hideInstallUI();
+            
+            if (outcome === 'accepted') {
+                console.log('[PWA] App installed successfully');
+            }
+        };
+        
+        // Dismiss install banner
+        window.dismissInstallBanner = function() {
+            if (pwaInstallBanner) {
+                pwaInstallBanner.classList.remove('visible');
+            }
+            localStorage.setItem('musify_install_dismissed', Date.now().toString());
+        };
+        
+        // Listen for beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('[PWA] beforeinstallprompt fired');
+            // Prevent the mini-infobar from appearing
+            e.preventDefault();
+            // Save the event for later
+            deferredPrompt = e;
+            // Show install UI
+            showInstallUI();
+        });
+        
+        // Listen for app installed event
+        window.addEventListener('appinstalled', (e) => {
+            console.log('[PWA] App was installed');
+            hideInstallUI();
+            deferredPrompt = null;
+        });
+        
+        // Install button click handler
+        if (installBtn) {
+            installBtn.addEventListener('click', installPWA);
+        }
+        
+        // Check install state on load
+        if (isAppInstalled()) {
+            console.log('[PWA] App is already installed');
+            hideInstallUI();
+        }
+
         // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/static/sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registered:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.log('ServiceWorker registration failed:', error);
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('/static/sw.js', {
+                        scope: '/'
                     });
+                    console.log('[SW] Registered:', registration.scope);
+                    
+                    // Check for updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        console.log('[SW] Update found');
+                        
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // New version available
+                                console.log('[SW] New version available');
+                                // Optionally show update notification
+                            }
+                        });
+                    });
+                    
+                    // Handle controller change (new SW activated)
+                    navigator.serviceWorker.addEventListener('controllerchange', () => {
+                        console.log('[SW] Controller changed');
+                    });
+                    
+                    // Handle messages from SW
+                    navigator.serviceWorker.addEventListener('message', (event) => {
+                        const { action } = event.data || {};
+                        switch (action) {
+                            case 'play':
+                                if (typeof play === 'function') play();
+                                break;
+                            case 'pause':
+                                if (typeof pause === 'function') pause();
+                                break;
+                            case 'next':
+                                document.getElementById('nextBtn')?.click();
+                                break;
+                            case 'previous':
+                                document.getElementById('prevBtn')?.click();
+                                break;
+                        }
+                    });
+                } catch (error) {
+                    console.error('[SW] Registration failed:', error);
+                }
             });
         }
     </script>
