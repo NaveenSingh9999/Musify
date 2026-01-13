@@ -3558,22 +3558,9 @@
                     <input type="text" id="searchInput" placeholder="{% if on_host %}Search trending...{% else %}Filter library...{% endif %}">
                 </div>
                 
-                {% if on_host %}
-                <!-- Demo Mode Banner -->
-                <div style="background: linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="#eab308">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                    </svg>
-                    <div>
-                        <div style="font-size: 13px; font-weight: 600; color: #eab308;">Demo Mode</div>
-                        <div style="font-size: 11px; opacity: 0.7;">{{ demo_duration }}s preview • Stream from YouTube</div>
-                    </div>
-                </div>
-                {% endif %}
-                
                 <ul id="playlist">
                     {% if on_host %}
-                    <!-- Trending Songs (ON_HOST mode) -->
+                    <!-- Trending Songs (shown alongside local library in ON_HOST mode) -->
                     {% for song in trending_songs %}
                     <li class="playlist-item trending-item" data-index="{{ loop.index0 }}" data-video-id="{{ song.id }}" data-title="{{ song.title }}" data-artist="{{ song.artist }}" data-thumbnail="{{ song.thumbnail }}" data-duration="{{ song.duration_secs }}">
                         <img class="playlist-item-thumb" src="{{ song.thumbnail }}" alt="Cover" onerror="this.src='{{ url_for('static', filename='default-artwork.png') }}'">
@@ -3601,8 +3588,9 @@
                         <p style="font-size: 14px; margin-top: 8px;">Please wait while we fetch the latest hits</p>
                     </li>
                     {% endfor %}
-                    {% else %}
-                    <!-- Local Library Songs -->
+                    {% endif %}
+                    
+                    <!-- Local Library Songs (shown when available) -->
                     {% for song in songs %}
                     <li class="playlist-item" data-index="{{ loop.index0 }}" data-src="{{ url_for('play', filename=song) }}" data-title="{{ song[:-4] if song.endswith('.mp3') else song }}" data-file="{{ song }}">
                         <img class="playlist-item-thumb" src="{{ url_for('cover', filename=song) }}" alt="Cover" onerror="this.src='{{ url_for('static', filename='default-artwork.png') }}'">
@@ -3617,7 +3605,10 @@
                             <svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
                         </button>
                     </li>
-                    {% else %}
+                    {% endfor %}
+                    
+                    <!-- Empty state: only show when both local songs and trending songs are empty -->
+                    {% if not songs and not trending_songs %}
                     <li class="empty-state">
                         <svg viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
@@ -3625,7 +3616,6 @@
                         <p>No songs found</p>
                         <p style="font-size: 14px; margin-top: 8px;">Download some music to get started</p>
                     </li>
-                    {% endfor %}
                     {% endif %}
                 </ul>
             </aside>
@@ -4000,8 +3990,7 @@
         
         // App Configuration (from server)
         const APP_CONFIG = {
-            onHost: {{ 'true' if on_host else 'false' }},
-            demoDuration: {{ demo_duration if demo_duration else 'null' }}
+            onHost: {{ 'true' if on_host else 'false' }}
         };
         
         document.addEventListener('DOMContentLoaded', () => {
@@ -5940,31 +5929,7 @@
             streamingAudio.addEventListener('timeupdate', () => {
                 if (!isStreamingPlayback || !streamingAudio.duration) return;
                 
-                // Demo duration limit for ON_HOST mode
-                if (APP_CONFIG.onHost && APP_CONFIG.demoDuration) {
-                    if (streamingAudio.currentTime >= APP_CONFIG.demoDuration) {
-                        // Skip to next track after demo duration
-                        streamingAudio.pause();
-                        if (streamingQueue.length > 0) {
-                            const next = streamingQueue.shift();
-                            playStreamingTrack(next.id, next.title);
-                        } else {
-                            isPlaying = false;
-                            updatePlayIcon();
-                            // Show demo ended message
-                            trackArtist.textContent = 'Demo ended - ' + APP_CONFIG.demoDuration + 's preview';
-                        }
-                        return;
-                    }
-                    // Show remaining demo time in duration
-                    const remaining = APP_CONFIG.demoDuration - streamingAudio.currentTime;
-                    durationEl.textContent = formatTime(APP_CONFIG.demoDuration) + ' preview';
-                }
-                
-                const effectiveDuration = APP_CONFIG.onHost && APP_CONFIG.demoDuration 
-                    ? Math.min(streamingAudio.duration, APP_CONFIG.demoDuration) 
-                    : streamingAudio.duration;
-                const percent = (streamingAudio.currentTime / effectiveDuration) * 100;
+                const percent = (streamingAudio.currentTime / streamingAudio.duration) * 100;
                 progressBar.style.width = Math.min(percent, 100) + '%';
                 currentTimeEl.textContent = formatTime(streamingAudio.currentTime);
                 updateMiniProgress();
