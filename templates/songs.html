@@ -3559,7 +3559,7 @@
                 </div>
                 
                 <ul id="playlist">
-                    {% if on_host and trending_songs %}
+                    {% if on_host %}
                     <!-- Trending Songs (ON_HOST mode) -->
                     {% for song in trending_songs %}
                     <li class="playlist-item trending-item" data-index="{{ loop.index0 }}" data-video-id="{{ song.id }}" data-title="{{ song.title }}" data-artist="{{ song.artist }}" data-thumbnail="{{ song.thumbnail }}" data-duration="{{ song.duration_secs }}">
@@ -3608,7 +3608,7 @@
                     {% endfor %}
                     
                     <!-- Empty state: only show when both local songs and trending songs are empty -->
-                    {% if not songs and (not on_host or not trending_songs) %}
+                    {% if not songs and not trending_songs %}
                     <li class="empty-state">
                         <svg viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
