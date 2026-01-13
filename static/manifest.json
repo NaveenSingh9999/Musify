@@ -1,74 +1,166 @@
 {
   "name": "Musify - Music Downloader & Player",
   "short_name": "Musify",
+  "description": "Download and stream music with embedded metadata, cover art, and smart recommendations. Your personal music player.",
   "author": "Lamgerr",
-  "description": "Download and play music with embedded metadata and cover art",
-  "start_url": "/songs",
+  "version": "2.0.0",
+  "start_url": "/songs?source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#0f0f23",
   "theme_color": "#1a1a2e",
-  "orientation": "portrait-primary",
+  "orientation": "any",
+  "lang": "en",
+  "dir": "ltr",
+  "id": "/songs",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/static/icons/icon-72x72.png",
       "sizes": "72x72",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/static/icons/icon-96x96.png",
       "sizes": "96x96",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/static/icons/icon-128x128.png",
       "sizes": "128x128",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/static/icons/icon-144x144.png",
       "sizes": "144x144",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/static/icons/icon-152x152.png",
       "sizes": "152x152",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/static/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/static/icons/icon-384x384.png",
       "sizes": "384x384",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/static/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/static/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
-  "categories": ["music", "entertainment"],
+  "screenshots": [
+    {
+      "src": "/static/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Musify Desktop Player"
+    },
+    {
+      "src": "/static/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Musify Mobile Player"
+    }
+  ],
+  "categories": ["music", "entertainment", "utilities"],
+  "iarc_rating_id": "",
   "shortcuts": [
     {
       "name": "Download Music",
-      "url": "/",
-      "icons": [{"src": "/static/icons/icon-96x96.png", "sizes": "96x96"}]
+      "short_name": "Download",
+      "description": "Search and download music from YouTube",
+      "url": "/?source=shortcut",
+      "icons": [
+        {
+          "src": "/static/icons/icon-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Music Library",
-      "url": "/songs",
-      "icons": [{"src": "/static/icons/icon-96x96.png", "sizes": "96x96"}]
+      "short_name": "Library",
+      "description": "Browse your music library",
+      "url": "/songs?source=shortcut",
+      "icons": [
+        {
+          "src": "/static/icons/icon-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
     }
-  ]
+  ],
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "params": {
+      "title": "song_name",
+      "text": "song_name",
+      "url": "song_name"
+    }
+  },
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "web+musify",
+      "url": "/songs?track=%s"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/songs",
+      "accept": {
+        "audio/mpeg": [".mp3"],
+        "audio/mp4": [".m4a"],
+        "audio/ogg": [".ogg"],
+        "audio/flac": [".flac"],
+        "audio/wav": [".wav"]
+      }
+    }
+  ],
+  "related_applications": [],
+  "serviceworker": {
+    "src": "/static/sw.js",
+    "scope": "/",
+    "update_via_cache": "none"
+  }
 }
