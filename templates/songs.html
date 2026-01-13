@@ -3560,7 +3560,7 @@
                 
                 <ul id="playlist">
                     {% if on_host %}
-                    <!-- Trending Songs (ON_HOST mode) -->
+                    <!-- Trending Songs (shown alongside local library in ON_HOST mode) -->
                     {% for song in trending_songs %}
                     <li class="playlist-item trending-item" data-index="{{ loop.index0 }}" data-video-id="{{ song.id }}" data-title="{{ song.title }}" data-artist="{{ song.artist }}" data-thumbnail="{{ song.thumbnail }}" data-duration="{{ song.duration_secs }}">
                         <img class="playlist-item-thumb" src="{{ song.thumbnail }}" alt="Cover" onerror="this.src='{{ url_for('static', filename='default-artwork.png') }}'">
@@ -3590,7 +3590,7 @@
                     {% endfor %}
                     {% endif %}
                     
-                    <!-- Local Library Songs (always shown) -->
+                    <!-- Local Library Songs (shown when available) -->
                     {% for song in songs %}
                     <li class="playlist-item" data-index="{{ loop.index0 }}" data-src="{{ url_for('play', filename=song) }}" data-title="{{ song[:-4] if song.endswith('.mp3') else song }}" data-file="{{ song }}">
                         <img class="playlist-item-thumb" src="{{ url_for('cover', filename=song) }}" alt="Cover" onerror="this.src='{{ url_for('static', filename='default-artwork.png') }}'">
