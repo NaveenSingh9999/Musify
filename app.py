@@ -15,8 +15,19 @@ import random
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'lamgerrsmusify654'
+
+# ========================================
+# ON_HOST MODE CONFIGURATION
+# ========================================
+# Set to True when hosting publicly - shows trending songs from YouTube
+# Set to False for local/personal use - uses local music library
+ON_HOST = os.environ.get('ON_HOST', 'false').lower() == 'true'
+DEMO_PLAY_DURATION = 30  # Seconds - shortened play time when ON_HOST is True
+
 DOWNLOAD_FOLDER = '../../Music/'
 app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
+app.config['ON_HOST'] = ON_HOST
+app.config['DEMO_PLAY_DURATION'] = DEMO_PLAY_DURATION
 PREFERENCES_FILE = os.path.join(DOWNLOAD_FOLDER, '.musify_preferences.json')
 
 # Initialize SocketIO
@@ -670,7 +681,7 @@ def batch_download(songs, queue, online_mode=False):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', on_host=ON_HOST)
 
 @app.route('/download', methods=['POST'])
 def download():
@@ -729,10 +740,136 @@ def progress_old():
     return Response("data: {\"type\": \"error\", \"message\": \"Use session-based progress endpoint\"}\n\n", 
                    mimetype='text/event-stream')
 
+# ========================================
+# YOUTUBE TRENDING SONGS (ON_HOST MODE)
+# ========================================
+
+# Cache for trending songs to avoid excessive API calls
+trending_cache = {
+    'songs': [],
+    'timestamp': 0,
+    'ttl': 3600  # 1 hour cache
+}
+
+def fetch_trending_songs(limit=50):
+    """Fetch trending/popular songs from YouTube Music charts."""
+    current_time = time.time()
+    
+    # Return cached if valid
+    if trending_cache['songs'] and (current_time - trending_cache['timestamp']) < trending_cache['ttl']:
+        return trending_cache['songs'][:limit]
+    
+    try:
+        # Search for current trending/popular music
+        search_queries = [
+            'top hits 2025 music',
+            'trending songs 2025',
+            'popular music today',
+            'viral hits 2025',
+            'top 50 songs this week'
+        ]
+        
+        all_songs = []
+        seen_ids = set()
+        
+        ydl_opts = {
+            'quiet': True,
+            'no_warnings': True,
+            'extract_flat': 'in_playlist',
+        }
+        
+        for query in search_queries:
+            if len(all_songs) >= limit:
+                break
+                
+            try:
+                search_url = f'ytsearch20:{query}'
+                
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    results = ydl.extract_info(search_url, download=False)
+                
+                entries = results.get('entries', []) if results else []
+                
+                for entry in entries:
+                    if entry and entry.get('id') not in seen_ids:
+                        video_id = entry.get('id', '')
+                        duration_secs = entry.get('duration', 0) or 0
+                        
+                        # Skip very long videos (likely not songs)
+                        if duration_secs > 600:  # > 10 minutes
+                            continue
+                        
+                        mins = int(duration_secs // 60)
+                        secs = int(duration_secs % 60)
+                        duration_str = f"{mins}:{secs:02d}"
+                        
+                        song = {
+                            'id': video_id,
+                            'title': entry.get('title', 'Unknown'),
+                            'artist': entry.get('channel', entry.get('uploader', 'Unknown Artist')),
+                            'duration': duration_str,
+                            'duration_secs': duration_secs,
+                            'thumbnail': f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg" if video_id else None,
+                            'is_trending': True
+                        }
+                        all_songs.append(song)
+                        seen_ids.add(video_id)
+                        
+                        if len(all_songs) >= limit:
+                            break
+            except Exception as e:
+                print(f"Error fetching trending for '{query}': {e}")
+                continue
+        
+        # Update cache
+        if all_songs:
+            trending_cache['songs'] = all_songs
+            trending_cache['timestamp'] = current_time
+        
+        return all_songs[:limit]
+    
+    except Exception as e:
+        print(f"Error fetching trending songs: {e}")
+        return []
+
+@app.route('/api/trending')
+def get_trending():
+    """API endpoint to get trending songs."""
+    limit = request.args.get('limit', 30, type=int)
+    songs = fetch_trending_songs(limit)
+    return jsonify({
+        'songs': songs,
+        'on_host': ON_HOST,
+        'demo_duration': DEMO_PLAY_DURATION if ON_HOST else None
+    })
+
+@app.route('/api/config')
+def get_config():
+    """Get app configuration for frontend."""
+    return jsonify({
+        'on_host': ON_HOST,
+        'demo_play_duration': DEMO_PLAY_DURATION if ON_HOST else None,
+        'version': '2.0.0'
+    })
+
 @app.route('/songs')
 def list_songs():
-    songs = [f for f in os.listdir(DOWNLOAD_FOLDER) if f.endswith('.mp3')]
-    return render_template('songs.html', songs=songs)
+    if ON_HOST:
+        # In ON_HOST mode, show trending songs instead of local library
+        trending = fetch_trending_songs(30)
+        return render_template('songs.html', 
+                             songs=[], 
+                             trending_songs=trending,
+                             on_host=True,
+                             demo_duration=DEMO_PLAY_DURATION)
+    else:
+        # Local mode - show local library
+        songs = [f for f in os.listdir(DOWNLOAD_FOLDER) if f.endswith('.mp3')]
+        return render_template('songs.html', 
+                             songs=songs, 
+                             trending_songs=[],
+                             on_host=False,
+                             demo_duration=None)
 
 @app.route('/play/<filename>')
 def play(filename):
