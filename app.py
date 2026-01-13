@@ -22,12 +22,10 @@ app.config['SECRET_KEY'] = 'lamgerrsmusify654'
 # Set to True when hosting publicly - shows trending songs from YouTube
 # Set to False for local/personal use - uses local music library
 ON_HOST = os.environ.get('ON_HOST', 'false').lower() == 'true'
-DEMO_PLAY_DURATION = 30  # Seconds - shortened play time when ON_HOST is True
 
 DOWNLOAD_FOLDER = '../../Music/'
 app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
 app.config['ON_HOST'] = ON_HOST
-app.config['DEMO_PLAY_DURATION'] = DEMO_PLAY_DURATION
 PREFERENCES_FILE = os.path.join(DOWNLOAD_FOLDER, '.musify_preferences.json')
 
 # Initialize SocketIO
@@ -839,8 +837,7 @@ def get_trending():
     songs = fetch_trending_songs(limit)
     return jsonify({
         'songs': songs,
-        'on_host': ON_HOST,
-        'demo_duration': DEMO_PLAY_DURATION if ON_HOST else None
+        'on_host': ON_HOST
     })
 
 @app.route('/api/config')
@@ -848,23 +845,24 @@ def get_config():
     """Get app configuration for frontend."""
     return jsonify({
         'on_host': ON_HOST,
-        'demo_play_duration': DEMO_PLAY_DURATION if ON_HOST else None,
         'version': '2.0.0'
     })
 
 @app.route('/songs')
 def list_songs():
+    # Always show local songs, regardless of ON_HOST mode
+    songs = [f for f in os.listdir(DOWNLOAD_FOLDER) if f.endswith('.mp3')]
+    
+    # In ON_HOST mode, also show trending songs
     if ON_HOST:
-        # In ON_HOST mode, show trending songs instead of local library
         trending = fetch_trending_songs(30)
         return render_template('songs.html', 
-                             songs=[], 
+                             songs=songs, 
                              trending_songs=trending,
                              on_host=True,
-                             demo_duration=DEMO_PLAY_DURATION)
+                             demo_duration=None)
     else:
-        # Local mode - show local library
-        songs = [f for f in os.listdir(DOWNLOAD_FOLDER) if f.endswith('.mp3')]
+        # Local mode - show local library only
         return render_template('songs.html', 
                              songs=songs, 
                              trending_songs=[],
