@@ -859,15 +859,13 @@ def list_songs():
         return render_template('songs.html', 
                              songs=songs, 
                              trending_songs=trending,
-                             on_host=True,
-                             demo_duration=None)
+                             on_host=True)
     else:
         # Local mode - show local library only
         return render_template('songs.html', 
                              songs=songs, 
                              trending_songs=[],
-                             on_host=False,
-                             demo_duration=None)
+                             on_host=False)
 
 @app.route('/play/<filename>')
 def play(filename):
