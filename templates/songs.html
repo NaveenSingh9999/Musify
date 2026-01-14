@@ -5093,8 +5093,9 @@
                         // Update document title
                         document.title = `${currentStreamingSong.title} — Musify Stream`;
                         
-                        // Record play event for recommendation engine
-                        recordPlayEvent(currentStreamingSong.title, false);
+                        // Record play event for recommendation engine (not skipped)
+                        const isSkipped = false;
+                        recordPlayEvent(currentStreamingSong.title, isSkipped);
                     } else {
                         console.error('No stream URL returned:', data);
                         alert('Could not load stream. Try another song.');
@@ -5134,6 +5135,8 @@
                 if (!similarList) return;
                 
                 // Add smart shuffle indicator if applicable
+                // Badge is shown only on first item to indicate the entire list is AI-sorted
+                // (showing on every item would be cluttered and redundant)
                 const smartBadge = smartOrdered ? '<span class="ai-sorted-badge">AI SORTED</span>' : '';
                 
                 similarList.innerHTML = songs.slice(0, 10).map((s, i) => `

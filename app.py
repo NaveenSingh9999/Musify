@@ -24,6 +24,9 @@ app.config['SECRET_KEY'] = 'lamgerrsmusify654'
 ON_HOST = os.environ.get('ON_HOST', 'false').lower() == 'true'
 DEMO_PLAY_DURATION = 30  # Seconds - shortened play time when ON_HOST is True
 
+# Smart ordering configuration
+SMART_ORDER_BUFFER = 10  # Additional songs to fetch for better AI sorting quality
+
 DOWNLOAD_FOLDER = '../../Music/'
 app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
 app.config['ON_HOST'] = ON_HOST
@@ -303,6 +306,17 @@ class MusicRecommendationEngine:
         """
         Calculate a preference score for a streaming song (from YouTube).
         Uses title and artist information to match against learned preferences.
+        
+        Args:
+            title (str): The song title
+            artist (str, optional): The artist or channel name. Defaults to ''.
+            video_id (str, optional): The YouTube video ID. Defaults to ''.
+        
+        Returns:
+            dict: Score data with keys:
+                - score (float): Preference score between 0 and 1
+                - components (dict): Score breakdown by category
+                - features (dict): Extracted features from the song
         """
         # For streaming songs, we'll use title and artist to extract features
         song_identifier = f"{title} - {artist}" if artist else title
@@ -1492,8 +1506,8 @@ def get_similar_songs(video_id):
         seen_ids = {video_id}  # Don't include the current song
         
         # Fetch more songs than needed for smart ordering, but not excessive
-        # Use limit + 10 for better balance between quality and performance
-        fetch_limit = limit + 10 if use_smart_order else limit
+        # SMART_ORDER_BUFFER provides additional songs for better AI sorting quality
+        fetch_limit = limit + SMART_ORDER_BUFFER if use_smart_order else limit
         
         for search_q in search_queries[:2]:
             if len(similar_songs) >= fetch_limit:
