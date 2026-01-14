@@ -3990,7 +3990,7 @@
     </div>
 
     <audio id="audio" preload="metadata"></audio>
-    <audio id="streamingAudio" preload="metadata"></audio>
+    <audio id="streamingAudio" preload="auto"></audio>
 
     <!-- Wave Engine -->
     <script src="{{ url_for('static', filename='wave-engine.js') }}"></script>
@@ -5121,6 +5121,21 @@
                         playStreamingTrack(videoId, title);
                     });
                 });
+                
+                // Preload next song in queue for faster playback
+                if (songs.length > 0) {
+                    preloadNextStreamingSong(songs[0].id);
+                }
+            }
+            
+            // Preload stream URL for faster playback of next song
+            function preloadNextStreamingSong(videoId) {
+                // Fire and forget - don't wait for response, but log errors for debugging
+                fetch(`/api/stream/preload/${videoId}`)
+                    .then(res => {
+                        if (!res.ok) console.warn(`Preload failed for ${videoId}:`, res.status);
+                    })
+                    .catch(e => console.warn(`Preload error for ${videoId}:`, e));
             }
             
             // Toggle streaming mode
