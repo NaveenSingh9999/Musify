@@ -22,12 +22,10 @@ app.config['SECRET_KEY'] = 'lamgerrsmusify654'
 # Set to True when hosting publicly - shows trending songs from YouTube
 # Set to False for local/personal use - uses local music library
 ON_HOST = os.environ.get('ON_HOST', 'false').lower() == 'true'
-DEMO_PLAY_DURATION = 30  # Seconds - shortened play time when ON_HOST is True
 
 DOWNLOAD_FOLDER = '../../Music/'
 app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
 app.config['ON_HOST'] = ON_HOST
-app.config['DEMO_PLAY_DURATION'] = DEMO_PLAY_DURATION
 PREFERENCES_FILE = os.path.join(DOWNLOAD_FOLDER, '.musify_preferences.json')
 
 # Initialize SocketIO
@@ -839,8 +837,7 @@ def get_trending():
     songs = fetch_trending_songs(limit)
     return jsonify({
         'songs': songs,
-        'on_host': ON_HOST,
-        'demo_duration': DEMO_PLAY_DURATION if ON_HOST else None
+        'on_host': ON_HOST
     })
 
 @app.route('/api/config')
@@ -848,7 +845,6 @@ def get_config():
     """Get app configuration for frontend."""
     return jsonify({
         'on_host': ON_HOST,
-        'demo_play_duration': DEMO_PLAY_DURATION if ON_HOST else None,
         'version': '2.0.0'
     })
 
@@ -860,16 +856,14 @@ def list_songs():
         return render_template('songs.html', 
                              songs=[], 
                              trending_songs=trending,
-                             on_host=True,
-                             demo_duration=DEMO_PLAY_DURATION)
+                             on_host=True)
     else:
         # Local mode - show local library
         songs = [f for f in os.listdir(DOWNLOAD_FOLDER) if f.endswith('.mp3')]
         return render_template('songs.html', 
                              songs=songs, 
                              trending_songs=[],
-                             on_host=False,
-                             demo_duration=None)
+                             on_host=False)
 
 @app.route('/play/<filename>')
 def play(filename):
@@ -1496,6 +1490,11 @@ def handle_disconnect():
 @socketio.on('start_radio')
 def handle_start_radio(data):
     """Host starts the radio broadcast"""
+    # Disable radio in ON_HOST mode (public deployment has no local library)
+    if ON_HOST:
+        emit('error', {'message': 'Radio not available in public mode'})
+        return
+    
     # Check if request is from localhost (host)
     client_ip = request.remote_addr
     if client_ip not in ['127.0.0.1', 'localhost', '::1']:
