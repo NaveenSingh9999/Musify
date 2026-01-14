@@ -4664,6 +4664,7 @@
             let isStreamingPlayback = false; // True when playing streamed content
             let streamingQueue = [];
             let currentStreamingIndex = -1;
+            let currentStreamingSong = null; // Store current streaming song info for likes/favorites
             let currentViewMode = 'list';
 
             // ========================================
@@ -4790,7 +4791,9 @@
                             item.addEventListener('click', () => {
                                 const videoId = item.dataset.videoId;
                                 const title = item.dataset.title;
-                                playStreamingTrack(videoId, title);
+                                const artist = item.dataset.artist || '';
+                                const thumbnail = item.dataset.thumbnail || '';
+                                playStreamingTrack(videoId, title, artist, thumbnail);
                                 hideSearchPage();
                             });
                         });
@@ -4807,7 +4810,9 @@
                     item.addEventListener('click', () => {
                         const videoId = item.dataset.videoId;
                         const title = item.dataset.title;
-                        playStreamingTrack(videoId, title);
+                        const artist = item.dataset.artist || '';
+                        const thumbnail = item.dataset.thumbnail || '';
+                        playStreamingTrack(videoId, title, artist, thumbnail);
                         closeSearchOverlay();
                     });
                 });
@@ -4965,7 +4970,9 @@
                             // Play from streaming
                             const videoId = item.dataset.videoId;
                             const title = item.dataset.title;
-                            playStreamingTrack(videoId, title);
+                            const artist = item.dataset.artist || item.dataset.channel || '';
+                            const thumbnail = item.dataset.thumbnail || '';
+                            playStreamingTrack(videoId, title, artist, thumbnail);
                         }
                         closeSearchOverlay();
                     });
@@ -5003,7 +5010,7 @@
             }
             
             // Play a streaming track
-            async function playStreamingTrack(videoId, title) {
+            async function playStreamingTrack(videoId, title, artist = '', thumbnail = '') {
                 // Enter streaming playback mode and enable streaming mode
                 isStreamingPlayback = true;
                 isStreamingMode = true;
@@ -5030,42 +5037,53 @@
                     
                     if (data.stream_url) {
                         streamingAudio.src = data.stream_url;
-                        trackTitle.textContent = title || data.title || 'Streaming...';
-                        trackArtist.textContent = data.artist || 'YouTube';
+                        
+                        // Store current streaming song for favorites/likes
+                        currentStreamingSong = {
+                            id: videoId,
+                            title: title || data.title || 'Unknown',
+                            artist: artist || data.artist || 'YouTube',
+                            thumbnail: thumbnail || data.thumbnail,
+                            duration: data.duration
+                        };
+                        
+                        trackTitle.textContent = currentStreamingSong.title;
+                        trackArtist.textContent = currentStreamingSong.artist;
                         
                         // Set thumbnail
-                        if (data.thumbnail) {
-                            artwork.src = data.thumbnail;
-                            updateAmbient(data.thumbnail);
+                        if (currentStreamingSong.thumbnail) {
+                            artwork.src = currentStreamingSong.thumbnail;
+                            updateAmbient(currentStreamingSong.thumbnail);
                             // Update ambient image for player background
                             const ambientImage = document.getElementById('ambientImage');
                             if (ambientImage) {
-                                ambientImage.src = data.thumbnail;
+                                ambientImage.src = currentStreamingSong.thumbnail;
                             }
                         }
                         
                         // Save to streaming history cache
-                        saveToStreamingHistory({
-                            videoId: videoId,
-                            title: title || data.title || 'Unknown',
-                            artist: data.artist || 'YouTube',
-                            thumbnail: data.thumbnail,
-                            duration: data.duration
-                        });
+                        saveToStreamingHistory(currentStreamingSong);
                         
                         // Update mini player for streaming
                         updateMiniPlayer();
+                        
+                        // Update like button state
+                        updateLikeButtons();
+                        
                         // Mark body as streaming-mode and show UI
                         document.body.classList.add('streaming-mode');
                         if (streamToggle) streamToggle.classList.add('active');
                         
                         playStreaming();
                         
-                        // Load similar songs (upnext streaming queue)
+                        // Load similar songs (upnext streaming queue) with smart ordering
                         loadSimilarSongs(videoId);
                         
                         // Update document title
-                        document.title = `${title || data.title} — Musify Stream`;
+                        document.title = `${currentStreamingSong.title} — Musify Stream`;
+                        
+                        // Record play event for recommendation engine
+                        recordPlayEvent(currentStreamingSong.title, false);
                     } else {
                         console.error('No stream URL returned:', data);
                         alert('Could not load stream. Try another song.');
@@ -5076,7 +5094,7 @@
                 }
             }
             
-            // Load similar songs for current streaming track
+            // Load similar songs for current streaming track with smart ordering
             async function loadSimilarSongs(videoId) {
                 if (!similarQueue || !similarList) return;
                 
@@ -5084,12 +5102,13 @@
                 similarQueue.classList.add('active');
                 
                 try {
-                    const response = await fetch(`/api/stream/similar/${videoId}`);
+                    // Use smart ordering parameter to apply recommendation engine
+                    const response = await fetch(`/api/stream/similar/${videoId}?smart=true&limit=20`);
                     const data = await response.json();
                     
                     if (data.similar && data.similar.length > 0) {
                         streamingQueue = data.similar;
-                        displaySimilarSongs(data.similar);
+                        displaySimilarSongs(data.similar, data.smart_ordered);
                     } else {
                         similarList.innerHTML = '<div class="similar-empty">No similar songs found</div>';
                     }
@@ -5100,15 +5119,18 @@
             }
             
             // Display similar songs queue
-            function displaySimilarSongs(songs) {
+            function displaySimilarSongs(songs, smartOrdered = false) {
                 if (!similarList) return;
                 
+                // Add smart shuffle indicator if applicable
+                const smartBadge = smartOrdered ? '<span style="background: linear-gradient(135deg, #22c55e, #16a34a); padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 600; margin-left: 8px;">AI SORTED</span>' : '';
+                
                 similarList.innerHTML = songs.slice(0, 10).map((s, i) => `
-                    <div class="similar-item" data-video-id="${s.id}" data-title="${s.title}" data-index="${i}">
+                    <div class="similar-item" data-video-id="${s.id}" data-title="${s.title}" data-artist="${s.artist || s.channel}" data-thumbnail="${s.thumbnail || ''}" data-index="${i}">
                         <img class="similar-thumb" src="${s.thumbnail}" alt="${s.title}">
                         <div class="similar-info">
-                            <div class="similar-title">${s.title}</div>
-                            <div class="similar-channel">${s.channel}</div>
+                            <div class="similar-title">${s.title}${i === 0 ? smartBadge : ''}</div>
+                            <div class="similar-channel">${s.artist || s.channel}</div>
                         </div>
                     </div>
                 `).join('');
@@ -5118,7 +5140,9 @@
                     item.addEventListener('click', () => {
                         const videoId = item.dataset.videoId;
                         const title = item.dataset.title;
-                        playStreamingTrack(videoId, title);
+                        const artist = item.dataset.artist;
+                        const thumbnail = item.dataset.thumbnail;
+                        playStreamingTrack(videoId, title, artist, thumbnail);
                     });
                 });
             }
@@ -5234,16 +5258,44 @@
                 searchLibraryBtn.addEventListener('click', openSearchOverlay);
             }
 
-            // Like button functionality
+            // Like button functionality - Enhanced to support both local and streaming songs
             const trackLikeBtn = document.getElementById('trackLikeBtn');
             const trackLikeBtnHeader = document.getElementById('trackLikeBtnHeader');
             let likedTracks = JSON.parse(localStorage.getItem('likedTracks') || '[]');
+            let likedStreamingSongs = JSON.parse(localStorage.getItem('likedStreamingSongs') || '[]');
 
             function isTrackLiked(trackFile) {
                 return likedTracks.includes(trackFile);
             }
+            
+            function isStreamingSongLiked(videoId) {
+                return likedStreamingSongs.some(s => s.id === videoId);
+            }
 
             function toggleLike() {
+                // Handle streaming songs
+                if (isStreamingPlayback && currentStreamingSong) {
+                    const videoId = currentStreamingSong.id;
+                    const isLiked = isStreamingSongLiked(videoId);
+                    
+                    if (isLiked) {
+                        likedStreamingSongs = likedStreamingSongs.filter(s => s.id !== videoId);
+                    } else {
+                        likedStreamingSongs.push({
+                            id: videoId,
+                            title: currentStreamingSong.title || trackTitle.textContent,
+                            artist: currentStreamingSong.artist || trackArtist.textContent,
+                            thumbnail: currentStreamingSong.thumbnail || artwork.src,
+                            liked_at: new Date().toISOString()
+                        });
+                    }
+                    
+                    localStorage.setItem('likedStreamingSongs', JSON.stringify(likedStreamingSongs));
+                    updateLikeButtons();
+                    return;
+                }
+                
+                // Handle local library songs
                 if (currentIndex === -1 || !tracks[currentIndex]) return;
                 const trackFile = tracks[currentIndex].dataset.file;
                 const isLiked = isTrackLiked(trackFile);
@@ -5259,8 +5311,15 @@
             }
 
             function updateLikeButtons() {
-                if (currentIndex === -1 || !tracks[currentIndex]) return;
-                const isLiked = isTrackLiked(tracks[currentIndex].dataset.file);
+                let isLiked = false;
+                
+                // Check streaming song like status
+                if (isStreamingPlayback && currentStreamingSong) {
+                    isLiked = isStreamingSongLiked(currentStreamingSong.id);
+                } else if (currentIndex !== -1 && tracks[currentIndex]) {
+                    // Check local song like status
+                    isLiked = isTrackLiked(tracks[currentIndex].dataset.file);
+                }
                 
                 if (trackLikeBtn) {
                     trackLikeBtn.classList.toggle('active', isLiked);
@@ -5313,7 +5372,7 @@
                     // Play next from streaming queue
                     const nextSong = streamingQueue.shift();
                     if (nextSong) {
-                        playStreamingTrack(nextSong.id, nextSong.title);
+                        playStreamingTrack(nextSong.id, nextSong.title, nextSong.artist || nextSong.channel, nextSong.thumbnail);
                         displaySimilarSongs(streamingQueue);
                     }
                 } else if (!isStreamingPlayback) {
@@ -5778,7 +5837,7 @@
                     trendingLi.classList.add('active');
                     
                     // Play the streaming track
-                    playStreamingTrack(videoId, title);
+                    playStreamingTrack(videoId, title, artist, thumbnail);
                     
                     // On mobile, expand the player
                     if (isMobile) {
@@ -5947,7 +6006,7 @@
                         streamingAudio.pause();
                         if (streamingQueue.length > 0) {
                             const next = streamingQueue.shift();
-                            playStreamingTrack(next.id, next.title);
+                            playStreamingTrack(next.id, next.title, next.artist || next.channel, next.thumbnail);
                         } else {
                             isPlaying = false;
                             updatePlayIcon();
@@ -5982,7 +6041,7 @@
                 // Play next from streaming queue if available
                 if (streamingQueue.length > 0) {
                     const next = streamingQueue.shift();
-                    playStreamingTrack(next.id, next.title);
+                    playStreamingTrack(next.id, next.title, next.artist || next.channel, next.thumbnail);
                 } else {
                     // No more in queue, stop
                     isPlaying = false;
