@@ -2386,6 +2386,17 @@
             font-size: 11px;
             color: rgba(255,255,255,0.5);
         }
+        
+        /* AI Sorted Badge for smart recommendations */
+        .ai-sorted-badge {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 600;
+            margin-left: 8px;
+            display: inline-block;
+        }
 
         /* When similar queue is open, shift main content */
         body.queue-open .player-container {
@@ -5123,7 +5134,7 @@
                 if (!similarList) return;
                 
                 // Add smart shuffle indicator if applicable
-                const smartBadge = smartOrdered ? '<span style="background: linear-gradient(135deg, #22c55e, #16a34a); padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 600; margin-left: 8px;">AI SORTED</span>' : '';
+                const smartBadge = smartOrdered ? '<span class="ai-sorted-badge">AI SORTED</span>' : '';
                 
                 similarList.innerHTML = songs.slice(0, 10).map((s, i) => `
                     <div class="similar-item" data-video-id="${s.id}" data-title="${s.title}" data-artist="${s.artist || s.channel}" data-thumbnail="${s.thumbnail || ''}" data-index="${i}">

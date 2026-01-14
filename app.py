@@ -885,11 +885,19 @@ def get_config():
 
 @app.route('/songs')
 def list_songs():
-    # Get local library songs
-    local_songs = [f for f in os.listdir(DOWNLOAD_FOLDER) if f.endswith('.mp3')] if not ON_HOST else []
+    # Get local library songs (always try to load)
+    local_songs = []
+    try:
+        local_songs = [f for f in os.listdir(DOWNLOAD_FOLDER) if f.endswith('.mp3')]
+    except Exception as e:
+        print(f"Error loading local songs: {e}")
     
-    # Get trending/streaming songs if in ON_HOST mode
-    trending = fetch_trending_songs(30) if ON_HOST else []
+    # Get trending/streaming songs (always try to load for unified display)
+    trending = []
+    try:
+        trending = fetch_trending_songs(30)
+    except Exception as e:
+        print(f"Error loading trending songs: {e}")
     
     # Always show both local library and trending songs without discrimination
     # The frontend will handle favorites from both sources
@@ -1483,8 +1491,9 @@ def get_similar_songs(video_id):
         similar_songs = []
         seen_ids = {video_id}  # Don't include the current song
         
-        # Fetch more songs than needed so we can apply smart ordering
-        fetch_limit = limit * 2 if use_smart_order else limit
+        # Fetch more songs than needed for smart ordering, but not excessive
+        # Use limit + 10 for better balance between quality and performance
+        fetch_limit = limit + 10 if use_smart_order else limit
         
         for search_q in search_queries[:2]:
             if len(similar_songs) >= fetch_limit:
