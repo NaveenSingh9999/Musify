@@ -1152,66 +1152,55 @@ def stream_search():
         return jsonify({'error': str(e)}), 500
 
 
+def _extract_audio_stream_info(video_id):
+    """Helper function to extract audio stream info from YouTube video."""
+    ydl_opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'format': 'bestaudio/best',
+        'skip_download': True,
+        'no_playlist': True,
+    }
+    
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(f'https://www.youtube.com/watch?v={video_id}', download=False)
+    
+    # Get the best audio format URL (prefer audio-only formats)
+    formats = info.get('formats', [])
+    audio_url = None
+    
+    for f in formats:
+        if f.get('acodec') != 'none' and f.get('vcodec') == 'none':
+            audio_url = f.get('url')
+            break
+    
+    # Fallback to best format
+    if not audio_url:
+        audio_url = info.get('url') or (formats[-1].get('url') if formats else None)
+    
+    return {
+        'stream_url': audio_url,
+        'title': info.get('title', 'Unknown'),
+        'artist': info.get('channel', info.get('uploader', 'Unknown Artist')),
+        'duration': info.get('duration', 0),
+        'thumbnail': info.get('thumbnail', f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg"),
+        'video_id': video_id
+    }
+
+
 @app.route('/api/stream/url/<video_id>')
 def get_stream_url(video_id):
     """Get direct audio stream URL for a YouTube video with caching for faster playback."""
     try:
-        now = time.time()
-        cache_key = f"audio_{video_id}"
-        
         # Check cache first for instant response
-        if cache_key in audio_stream_cache:
-            cached = audio_stream_cache[cache_key]
-            if now - cached['timestamp'] < AUDIO_CACHE_TTL:
-                return jsonify(cached['data'])
-            else:
-                # Expired, remove from cache
-                del audio_stream_cache[cache_key]
+        cached = _get_cached_stream(video_id)
+        if cached:
+            return jsonify(cached)
         
-        # Optimized yt-dlp options for faster extraction
-        ydl_opts = {
-            'quiet': True,
-            'no_warnings': True,
-            'format': 'bestaudio/best',
-            'skip_download': True,
-            'no_playlist': True,
-            # Disable unnecessary extractors for speed
-            'extract_flat': False,
-            # Use concurrent fragment downloads for faster metadata
-            'concurrent_fragment_downloads': 1,
-        }
-        
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(f'https://www.youtube.com/watch?v={video_id}', download=False)
-        
-        # Get the best audio format URL
-        formats = info.get('formats', [])
-        audio_url = None
-        
-        # Prefer audio-only formats (usually faster to load)
-        for f in formats:
-            if f.get('acodec') != 'none' and f.get('vcodec') == 'none':
-                audio_url = f.get('url')
-                break
-        
-        # Fallback to best format
-        if not audio_url:
-            audio_url = info.get('url') or (formats[-1].get('url') if formats else None)
-        
-        result = {
-            'stream_url': audio_url,
-            'title': info.get('title', 'Unknown'),
-            'artist': info.get('channel', info.get('uploader', 'Unknown Artist')),
-            'duration': info.get('duration', 0),
-            'thumbnail': info.get('thumbnail', f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg"),
-            'video_id': video_id
-        }
+        result = _extract_audio_stream_info(video_id)
         
         # Cache the result for future requests
-        audio_stream_cache[cache_key] = {
-            'data': result,
-            'timestamp': now
-        }
+        _cache_stream(video_id, result)
         
         return jsonify(result)
     except Exception as e:
@@ -1222,57 +1211,19 @@ def get_stream_url(video_id):
 def preload_stream_url(video_id):
     """Preload/cache stream URL for a video. Called in background for next track."""
     try:
-        now = time.time()
-        cache_key = f"audio_{video_id}"
-        
         # Check if already cached
-        if cache_key in audio_stream_cache:
-            cached = audio_stream_cache[cache_key]
-            if now - cached['timestamp'] < AUDIO_CACHE_TTL:
-                return jsonify({'cached': True, 'video_id': video_id})
+        if _get_cached_stream(video_id):
+            return jsonify({'cached': True, 'video_id': video_id})
         
-        # Optimized yt-dlp options for faster extraction
-        ydl_opts = {
-            'quiet': True,
-            'no_warnings': True,
-            'format': 'bestaudio/best',
-            'skip_download': True,
-            'no_playlist': True,
-        }
-        
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(f'https://www.youtube.com/watch?v={video_id}', download=False)
-        
-        # Get the best audio format URL
-        formats = info.get('formats', [])
-        audio_url = None
-        
-        for f in formats:
-            if f.get('acodec') != 'none' and f.get('vcodec') == 'none':
-                audio_url = f.get('url')
-                break
-        
-        if not audio_url:
-            audio_url = info.get('url') or (formats[-1].get('url') if formats else None)
-        
-        result = {
-            'stream_url': audio_url,
-            'title': info.get('title', 'Unknown'),
-            'artist': info.get('channel', info.get('uploader', 'Unknown Artist')),
-            'duration': info.get('duration', 0),
-            'thumbnail': info.get('thumbnail', f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg"),
-            'video_id': video_id
-        }
+        result = _extract_audio_stream_info(video_id)
         
         # Cache for future use
-        audio_stream_cache[cache_key] = {
-            'data': result,
-            'timestamp': now
-        }
+        _cache_stream(video_id, result)
         
         return jsonify({'cached': True, 'video_id': video_id})
     except Exception as e:
-        return jsonify({'cached': False, 'error': str(e)}), 200  # Return 200 even on error for preload
+        # Return 500 for actual errors - client handles errors gracefully
+        return jsonify({'cached': False, 'error': str(e)}), 500
 
 
 @app.route('/api/stream/video/<video_id>')
@@ -1306,6 +1257,41 @@ def get_video_stream_url(video_id):
 # Audio stream cache to speed up streaming playback
 audio_stream_cache = {}
 AUDIO_CACHE_TTL = 3600  # 1 hour - YouTube URLs typically expire after ~6 hours
+AUDIO_CACHE_MAX_SIZE = 100  # Maximum number of cached entries
+
+
+def _get_cached_stream(video_id):
+    """Check cache for stream URL. Returns cached data or None."""
+    cache_key = f"audio_{video_id}"
+    now = time.time()
+    
+    if cache_key in audio_stream_cache:
+        cached = audio_stream_cache[cache_key]
+        if now - cached['timestamp'] < AUDIO_CACHE_TTL:
+            return cached['data']
+        else:
+            # Expired, remove from cache
+            del audio_stream_cache[cache_key]
+    return None
+
+
+def _cache_stream(video_id, data):
+    """Cache stream data with size limit enforcement."""
+    cache_key = f"audio_{video_id}"
+    now = time.time()
+    
+    # Enforce cache size limit by removing oldest entries
+    if len(audio_stream_cache) >= AUDIO_CACHE_MAX_SIZE:
+        # Find and remove the oldest entry
+        oldest_key = min(audio_stream_cache.keys(), 
+                        key=lambda k: audio_stream_cache[k]['timestamp'])
+        del audio_stream_cache[oldest_key]
+    
+    audio_stream_cache[cache_key] = {
+        'data': data,
+        'timestamp': now
+    }
+
 
 # Video stream cache to avoid repeated yt-dlp calls
 video_stream_cache = {}

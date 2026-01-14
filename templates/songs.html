@@ -5129,13 +5129,13 @@
             }
             
             // Preload stream URL for faster playback of next song
-            async function preloadNextStreamingSong(videoId) {
-                try {
-                    // Fire and forget - don't wait for response
-                    fetch(`/api/stream/preload/${videoId}`).catch(() => {});
-                } catch (e) {
-                    // Ignore preload errors
-                }
+            function preloadNextStreamingSong(videoId) {
+                // Fire and forget - don't wait for response, but log errors for debugging
+                fetch(`/api/stream/preload/${videoId}`)
+                    .then(res => {
+                        if (!res.ok) console.warn(`Preload failed for ${videoId}:`, res.status);
+                    })
+                    .catch(e => console.warn(`Preload error for ${videoId}:`, e));
             }
             
             // Toggle streaming mode
