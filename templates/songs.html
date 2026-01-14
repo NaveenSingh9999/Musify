@@ -6116,7 +6116,9 @@
             // ========================================
             
             const socket = io();
-            let isHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            // Only allow host functionality if not in ON_HOST mode (public deployment)
+            // and accessing from localhost
+            let isHost = !APP_CONFIG.onHost && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
             let isRadioLive = false;
             let isBroadcasting = false;
             let isListening = false;

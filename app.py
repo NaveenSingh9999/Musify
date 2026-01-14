@@ -1490,6 +1490,11 @@ def handle_disconnect():
 @socketio.on('start_radio')
 def handle_start_radio(data):
     """Host starts the radio broadcast"""
+    # Disable radio in ON_HOST mode (public deployment has no local library)
+    if ON_HOST:
+        emit('error', {'message': 'Radio not available in public mode'})
+        return
+    
     # Check if request is from localhost (host)
     client_ip = request.remote_addr
     if client_ip not in ['127.0.0.1', 'localhost', '::1']:
