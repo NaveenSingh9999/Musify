@@ -24,6 +24,9 @@ app.config['SECRET_KEY'] = 'lamgerrsmusify654'
 ON_HOST = os.environ.get('ON_HOST', 'false').lower() == 'true'
 DEMO_PLAY_DURATION = 30  # Seconds - shortened play time when ON_HOST is True
 
+# Smart ordering configuration
+SMART_ORDER_BUFFER = 10  # Additional songs to fetch for better AI sorting quality
+
 DOWNLOAD_FOLDER = '../../Music/'
 app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
 app.config['ON_HOST'] = ON_HOST
@@ -299,10 +302,34 @@ class MusicRecommendationEngine:
             'features': features
         }
     
-    def get_smart_shuffle_order(self, songs):
+    def calculate_streaming_song_score(self, title, artist='', video_id=''):
+        """
+        Calculate a preference score for a streaming song (from YouTube).
+        Uses title and artist information to match against learned preferences.
+        
+        Args:
+            title (str): The song title
+            artist (str, optional): The artist or channel name. Defaults to ''.
+            video_id (str, optional): The YouTube video ID. Defaults to ''.
+        
+        Returns:
+            dict: Score data with keys:
+                - score (float): Preference score between 0 and 1
+                - components (dict): Score breakdown by category
+                - features (dict): Extracted features from the song
+        """
+        # For streaming songs, we'll use title and artist to extract features
+        song_identifier = f"{title} - {artist}" if artist else title
+        return self.calculate_song_score(song_identifier)
+    
+    def get_smart_shuffle_order(self, songs, song_type='local'):
         """
         Get a smart shuffle order that prioritizes preferred songs.
         Creates two lists: likely-to-enjoy and others, then interleaves them smartly.
+        
+        Args:
+            songs: List of songs (can be filenames or dict with title/artist for streaming)
+            song_type: 'local' for library files, 'streaming' for YouTube songs
         """
         if not songs:
             return []
@@ -310,12 +337,30 @@ class MusicRecommendationEngine:
         # Calculate scores for all songs
         scored_songs = []
         for song in songs:
-            score_data = self.calculate_song_score(song)
-            scored_songs.append({
-                'name': song,
-                'score': score_data['score'],
-                'data': score_data
-            })
+            if song_type == 'streaming' and isinstance(song, dict):
+                # For streaming songs with metadata
+                score_data = self.calculate_streaming_song_score(
+                    song.get('title', ''),
+                    song.get('artist', ''),
+                    song.get('id', '')
+                )
+                scored_songs.append({
+                    'name': song.get('title', 'Unknown'),
+                    'id': song.get('id', ''),
+                    'artist': song.get('artist', ''),
+                    'type': 'streaming',
+                    'score': score_data['score'],
+                    'data': score_data
+                })
+            else:
+                # For local library songs (filenames)
+                score_data = self.calculate_song_score(song)
+                scored_songs.append({
+                    'name': song,
+                    'type': 'local',
+                    'score': score_data['score'],
+                    'data': score_data
+                })
         
         # Sort by score
         scored_songs.sort(key=lambda x: x['score'], reverse=True)
@@ -854,22 +899,27 @@ def get_config():
 
 @app.route('/songs')
 def list_songs():
-    if ON_HOST:
-        # In ON_HOST mode, show trending songs instead of local library
+    # Get local library songs (always try to load)
+    local_songs = []
+    try:
+        local_songs = [f for f in os.listdir(DOWNLOAD_FOLDER) if f.endswith('.mp3')]
+    except Exception as e:
+        print(f"Error loading local songs: {e}")
+    
+    # Get trending/streaming songs (always try to load for unified display)
+    trending = []
+    try:
         trending = fetch_trending_songs(30)
-        return render_template('songs.html', 
-                             songs=[], 
-                             trending_songs=trending,
-                             on_host=True,
-                             demo_duration=DEMO_PLAY_DURATION)
-    else:
-        # Local mode - show local library
-        songs = [f for f in os.listdir(DOWNLOAD_FOLDER) if f.endswith('.mp3')]
-        return render_template('songs.html', 
-                             songs=songs, 
-                             trending_songs=[],
-                             on_host=False,
-                             demo_duration=None)
+    except Exception as e:
+        print(f"Error loading trending songs: {e}")
+    
+    # Always show both local library and trending songs without discrimination
+    # The frontend will handle favorites from both sources
+    return render_template('songs.html', 
+                         songs=local_songs, 
+                         trending_songs=trending,
+                         on_host=ON_HOST,
+                         demo_duration=DEMO_PLAY_DURATION if ON_HOST else None)
 
 @app.route('/play/<filename>')
 def play(filename):
@@ -1099,6 +1149,115 @@ def reset_preferences():
 
 
 # ========================================
+# FAVORITES API ENDPOINTS
+# ========================================
+
+@app.route('/api/favorites/list')
+def list_favorites():
+    """Get list of all favorite songs (both local and streaming)."""
+    try:
+        # This endpoint returns metadata about favorites
+        # The actual liked tracks are stored in browser localStorage
+        # But we can provide enriched data for both local and streaming favorites
+        
+        local_songs = []
+        if not ON_HOST:
+            all_local = [f for f in os.listdir(DOWNLOAD_FOLDER) if f.endswith('.mp3')]
+            for song in all_local:
+                # Get recommendation score for local songs
+                score_data = recommendation_engine.calculate_song_score(song)
+                local_songs.append({
+                    'type': 'local',
+                    'filename': song,
+                    'title': song[:-4] if song.endswith('.mp3') else song,
+                    'score': score_data['score'],
+                    'url': f"/play/{song}",
+                    'cover_url': f"/cover/{song}"
+                })
+        
+        return jsonify({
+            'local_songs': local_songs,
+            'on_host': ON_HOST
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/recommend/suggestions', methods=['POST'])
+def get_smart_suggestions():
+    """
+    Get smart song suggestions based on current context.
+    Handles both offline library and streaming suggestions.
+    """
+    try:
+        data = request.get_json() or {}
+        mode = data.get('mode', 'offline')  # 'offline' or 'streaming'
+        current_song = data.get('current_song', '')
+        limit = data.get('limit', 10)
+        
+        suggestions = []
+        
+        if mode == 'offline':
+            # Get suggestions from local library using recommendation engine
+            local_songs = [f for f in os.listdir(DOWNLOAD_FOLDER) if f.endswith('.mp3')]
+            
+            if local_songs:
+                # Use smart shuffle to get best recommendations
+                shuffle_order = recommendation_engine.get_smart_shuffle_order(local_songs)
+                
+                # Return top suggestions with scores
+                for item in shuffle_order[:limit]:
+                    suggestions.append({
+                        'type': 'local',
+                        'filename': item['name'],
+                        'title': item['name'][:-4] if item['name'].endswith('.mp3') else item['name'],
+                        'score': item['score'],
+                        'reason': 'Based on your listening preferences'
+                    })
+        
+        elif mode == 'streaming':
+            # For streaming mode, suggestions will be handled by YouTube's similar/related API
+            # The frontend should use the existing /api/stream/similar endpoint
+            # But we can enhance it with learned preferences
+            
+            if current_song:
+                # Extract features from current song to enhance streaming suggestions
+                features = recommendation_engine._extract_features(current_song)
+                
+                # Get top keywords and genres for search hints
+                top_keywords = sorted(
+                    recommendation_engine.data['keyword_scores'].items(),
+                    key=lambda x: x[1],
+                    reverse=True
+                )[:3]
+                
+                top_genres = sorted(
+                    recommendation_engine.data['genre_hints'].items(),
+                    key=lambda x: x[1],
+                    reverse=True
+                )[:2]
+                
+                suggestions.append({
+                    'type': 'streaming',
+                    'context': {
+                        'keywords': [k for k, _ in top_keywords],
+                        'genres': [g for g, _ in top_genres],
+                        'artist': features.get('artist'),
+                        'current_features': features
+                    },
+                    'reason': 'Use /api/stream/similar with learned preferences'
+                })
+        
+        return jsonify({
+            'mode': mode,
+            'suggestions': suggestions,
+            'count': len(suggestions)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ========================================
 # STREAMING API ENDPOINTS
 # ========================================
 
@@ -1315,6 +1474,7 @@ def video_proxy(video_id):
 def get_similar_songs(video_id):
     """Get similar/related songs for a given video - like YouTube Music's 'Up Next'."""
     limit = request.args.get('limit', 10, type=int)
+    use_smart_order = request.args.get('smart', 'true').lower() == 'true'
     
     try:
         ydl_opts = {
@@ -1345,8 +1505,12 @@ def get_similar_songs(video_id):
         similar_songs = []
         seen_ids = {video_id}  # Don't include the current song
         
+        # Fetch more songs than needed for smart ordering, but not excessive
+        # SMART_ORDER_BUFFER provides additional songs for better AI sorting quality
+        fetch_limit = limit + SMART_ORDER_BUFFER if use_smart_order else limit
+        
         for search_q in search_queries[:2]:
-            if len(similar_songs) >= limit:
+            if len(similar_songs) >= fetch_limit:
                 break
             
             search_opts = {
@@ -1356,7 +1520,7 @@ def get_similar_songs(video_id):
             }
             
             # Use search URL format instead of default_search
-            search_url = f'ytsearch{limit}:{search_q}'
+            search_url = f'ytsearch{fetch_limit}:{search_q}'
             
             with yt_dlp.YoutubeDL(search_opts) as ydl:
                 results = ydl.extract_info(search_url, download=False)
@@ -1373,17 +1537,45 @@ def get_similar_songs(video_id):
                     similar_songs.append({
                         'id': vid,
                         'title': entry.get('title', 'Unknown'),
+                        'artist': entry.get('channel', entry.get('uploader', 'Unknown Artist')),
                         'channel': entry.get('channel', entry.get('uploader', 'Unknown Artist')),
                         'duration': duration_str,
+                        'duration_secs': duration_secs,
                         'thumbnail': f"https://img.youtube.com/vi/{vid}/mqdefault.jpg" if vid else None,
                     })
                     seen_ids.add(vid)
                     
-                    if len(similar_songs) >= limit:
+                    if len(similar_songs) >= fetch_limit:
                         break
         
+        # Apply smart ordering if requested
+        if use_smart_order and similar_songs:
+            try:
+                # Use recommendation engine to order songs based on learned preferences
+                smart_ordered = recommendation_engine.get_smart_shuffle_order(similar_songs, song_type='streaming')
+                # Take only the requested limit
+                similar_songs = [
+                    {
+                        'id': s.get('id'),
+                        'title': s.get('name'),
+                        'artist': s.get('artist', 'Unknown Artist'),
+                        'channel': s.get('artist', 'Unknown Artist'),
+                        'duration': next((song['duration'] for song in similar_songs if song['id'] == s.get('id')), '0:00'),
+                        'duration_secs': next((song['duration_secs'] for song in similar_songs if song['id'] == s.get('id')), 0),
+                        'thumbnail': f"https://img.youtube.com/vi/{s.get('id')}/mqdefault.jpg",
+                        'score': round(s.get('score', 0.5), 3)
+                    }
+                    for s in smart_ordered[:limit]
+                ]
+            except Exception as e:
+                print(f"Smart ordering failed, using default order: {e}")
+                similar_songs = similar_songs[:limit]
+        else:
+            similar_songs = similar_songs[:limit]
+        
         return jsonify({
-            'similar': similar_songs[:limit],
+            'similar': similar_songs,
+            'smart_ordered': use_smart_order,
             'based_on': {
                 'id': video_id,
                 'title': title,
